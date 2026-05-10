@@ -36,7 +36,7 @@ export async function POST(request: Request) {
 
     const [user] = await db
       .insert(users)
-      .values({ email, passwordHash, displayName, dailyAvailableMinutes, timezone })
+      .values({ email, passwordHash, displayName, dailyAvailableMinutes, timezone, onboardingCompleted: false })
       .returning({ id: users.id, email: users.email, displayName: users.displayName });
 
     return NextResponse.json(user, { status: 201 });

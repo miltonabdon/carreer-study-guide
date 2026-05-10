@@ -3,13 +3,14 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { signOut } from "next-auth/react";
-import { LayoutDashboard, BookOpen, TrendingUp, Brain, LogOut } from "lucide-react";
+import { LayoutDashboard, BookOpen, TrendingUp, Brain, Settings, LogOut } from "lucide-react";
 
 const NAV_ITEMS = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { href: "/goals", label: "Goals", icon: BookOpen },
   { href: "/progress", label: "Progress", icon: TrendingUp },
   { href: "/coach", label: "Coach", icon: Brain },
+  { href: "/settings", label: "Configurações", icon: Settings },
 ];
 
 export function NavBar() {

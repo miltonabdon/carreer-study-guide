@@ -22,7 +22,7 @@ const learningPathSchema = z.object({
   paceWarning: z.string().nullable(),
 });
 
-export type GeneratedLearningPath = z.infer<typeof learningPathSchema>;
+export type GeneratedLearningPath = z.infer<typeof learningPathSchema> & { fallbackUsed: boolean };
 
 function mockLearningPath(goalTitle: string, dailyAvailableMinutes: number): GeneratedLearningPath {
   const topics = [
@@ -37,7 +37,7 @@ function mockLearningPath(goalTitle: string, dailyAvailableMinutes: number): Gen
   ];
   const total = topics.reduce((s, t) => s + t.estimatedMinutes, 0);
   const weeks = Math.ceil(total / (dailyAvailableMinutes * 5));
-  return { topics, totalEstimatedMinutes: total, completionWeeksEstimate: weeks, paceWarning: null };
+  return { topics, totalEstimatedMinutes: total, completionWeeksEstimate: weeks, paceWarning: null, fallbackUsed: true };
 }
 
 export async function generateLearningPath(
@@ -48,11 +48,12 @@ export async function generateLearningPath(
 ): Promise<GeneratedLearningPath> {
   if (MOCK_AI) return mockLearningPath(goalTitle, dailyAvailableMinutes);
 
-  const { object } = await generateObject({
-    model: anthropic(MODEL),
-    schema: learningPathSchema,
-    system: LEARNING_PATH_SYSTEM_PROMPT,
-    prompt: `Generate a complete learning path for the following goal.
+  try {
+    const { object } = await generateObject({
+      model: anthropic(MODEL),
+      schema: learningPathSchema,
+      system: LEARNING_PATH_SYSTEM_PROMPT,
+      prompt: `Generate a complete learning path for the following goal.
 
 Goal Title: ${goalTitle}
 Goal Description: ${goalDescription}
@@ -68,9 +69,12 @@ Requirements:
 - Calculate totalEstimatedMinutes as the sum of all topic durations
 - Calculate completionWeeksEstimate based on ${dailyAvailableMinutes} min/day, 5 days/week
 - Include a paceWarning if the goal seems unrealistic for the timeline, or null if it's reasonable`,
-  });
-
-  return object;
+    });
+    return { ...object, fallbackUsed: false };
+  } catch (err) {
+    console.error("[generateLearningPath] AI error, using fallback:", err);
+    return mockLearningPath(goalTitle, dailyAvailableMinutes);
+  }
 }
 
 // ─── Daily Plan Generation ────────────────────────────────────────────────────
@@ -87,7 +91,7 @@ const dailyPlanSchema = z.object({
   aiRationale: z.string(),
 });
 
-export type GeneratedDailyPlan = z.infer<typeof dailyPlanSchema>;
+export type GeneratedDailyPlan = z.infer<typeof dailyPlanSchema> & { fallbackUsed: boolean };
 
 interface DueReview {
   topicId: string;
@@ -112,7 +116,7 @@ export async function generateDailyPlanWithAI(
   dueReviews: DueReview[],
   newLearningCandidates: NewLearningCandidate[]
 ): Promise<GeneratedDailyPlan> {
-  if (MOCK_AI) {
+  function buildFallbackPlan(): GeneratedDailyPlan {
     const tasks: GeneratedDailyPlan["tasks"] = [];
     let remaining = availableMinutes;
     for (const r of dueReviews) {
@@ -127,14 +131,17 @@ export async function generateDailyPlanWithAI(
       tasks.push({ topicId: c.topicId, taskType: "new_learning", suggestedMinutes: mins, rationale: "Next topic in path" });
       remaining -= mins;
     }
-    return { tasks, aiRationale: "Mock daily plan — add Anthropic credits to enable AI planning." };
+    return { tasks, aiRationale: "Plano gerado por regras internas.", fallbackUsed: true };
   }
 
-  const { object } = await generateObject({
-    model: anthropic(MODEL),
-    schema: dailyPlanSchema,
-    system: DAILY_PLAN_SYSTEM_PROMPT,
-    prompt: `Generate an optimized daily study plan.
+  if (MOCK_AI) return buildFallbackPlan();
+
+  try {
+    const { object } = await generateObject({
+      model: anthropic(MODEL),
+      schema: dailyPlanSchema,
+      system: DAILY_PLAN_SYSTEM_PROMPT,
+      prompt: `Generate an optimized daily study plan.
 
 Available time today: ${availableMinutes} minutes
 
@@ -163,7 +170,10 @@ ${
 }
 
 Select tasks that fit within ${availableMinutes} minutes total. Include all overdue reviews first, then fill remaining time with new learning.`,
-  });
-
-  return object;
+    });
+    return { ...object, fallbackUsed: false };
+  } catch (err) {
+    console.error("[generateDailyPlanWithAI] AI error, using fallback:", err);
+    return buildFallbackPlan();
+  }
 }

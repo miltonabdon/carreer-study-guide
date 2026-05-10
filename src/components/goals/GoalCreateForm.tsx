@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { X } from "lucide-react";
+import { X, AlertTriangle } from "lucide-react";
 
 interface GoalCreateFormProps {
   onClose: () => void;
@@ -12,11 +12,13 @@ export function GoalCreateForm({ onClose }: GoalCreateFormProps) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [fallbackUsed, setFallbackUsed] = useState(false);
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setLoading(true);
     setError(null);
+    setFallbackUsed(false);
 
     const form = new FormData(e.currentTarget);
     const targetDate = form.get("targetDate") as string;
@@ -36,6 +38,14 @@ export function GoalCreateForm({ onClose }: GoalCreateFormProps) {
       const data = await res.json().catch(() => ({}));
       setError(data.error ?? "Failed to create goal");
       setLoading(false);
+      return;
+    }
+
+    const data = await res.json().catch(() => ({}));
+    if (data?.path?.fallbackUsed) {
+      setFallbackUsed(true);
+      setLoading(false);
+      setTimeout(() => { router.refresh(); onClose(); }, 2500);
       return;
     }
 
@@ -113,6 +123,12 @@ export function GoalCreateForm({ onClose }: GoalCreateFormProps) {
           </div>
 
           {error && <p className="text-sm text-destructive">{error}</p>}
+          {fallbackUsed && (
+            <div className="flex items-center gap-2 rounded-md bg-amber-50 border border-amber-200 px-3 py-2">
+              <AlertTriangle className="h-3.5 w-3.5 text-amber-500 shrink-0" />
+              <p className="text-xs text-amber-700">IA indisponível — caminho de aprendizado padrão gerado</p>
+            </div>
+          )}
 
           <div className="flex gap-3 pt-2">
             <button

@@ -17,7 +17,7 @@ function getMidnightTTL(timezone = "UTC") {
   return Math.max(60, Math.floor((tomorrow.getTime() - now.getTime()) / 1000));
 }
 
-async function getPlanWithTasks(planId: string) {
+async function getPlanWithTasks(planId: string, fallbackUsed = false) {
   const [plan] = await db
     .select()
     .from(dailyPlans)
@@ -52,7 +52,7 @@ async function getPlanWithTasks(planId: string) {
   const completed = tasks.filter((t) => t.status === "completed").length;
   const completionPercent = tasks.length > 0 ? Math.round((completed / tasks.length) * 100) : 0;
 
-  return { ...plan, completionPercent, tasks };
+  return { ...plan, completionPercent, tasks, fallbackUsed };
 }
 
 export async function GET() {
@@ -85,7 +85,7 @@ export async function GET() {
     planData = await getPlanWithTasks(existing.id);
   } else {
     const generated = await generateDailyPlan(userId, today);
-    planData = { ...generated.plan, tasks: generated.tasks, completionPercent: 0 };
+    planData = { ...generated.plan, tasks: generated.tasks, completionPercent: 0, fallbackUsed: generated.fallbackUsed };
   }
 
   if (planData && redis) {

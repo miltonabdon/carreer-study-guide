@@ -7,7 +7,7 @@ import {
   dailyPlanTasks,
   users,
 } from "@/lib/db/schema";
-import { eq, and, asc, sql } from "drizzle-orm";
+import { eq, and, asc, desc, sql } from "drizzle-orm";
 import { generateDailyPlanWithAI } from "@/lib/ai/generate";
 
 export async function generateDailyPlan(
@@ -129,8 +129,27 @@ export async function generateDailyPlan(
     }
   }
 
+  // Detect missed days gap
+  const [lastPlan] = await db
+    .select({ planDate: dailyPlans.planDate })
+    .from(dailyPlans)
+    .where(eq(dailyPlans.userId, userId))
+    .orderBy(desc(dailyPlans.planDate))
+    .limit(1);
+
+  let gapDays: number | null = null;
+  let gapResolved = true;
+  if (lastPlan) {
+    const lastDate = new Date(lastPlan.planDate + "T12:00:00");
+    const todayDate = new Date(today + "T12:00:00");
+    const diffDays = Math.round((todayDate.getTime() - lastDate.getTime()) / 86400000) - 1;
+    if (diffDays >= 2) {
+      gapDays = diffDays;
+      gapResolved = false;
+    }
+  }
+
   if (dueReviews.length === 0 && newLearningCandidates.length === 0) {
-    // No content — create an empty plan
     const [plan] = await db
       .insert(dailyPlans)
       .values({
@@ -138,9 +157,11 @@ export async function generateDailyPlan(
         planDate: today,
         availableMinutes,
         aiRationale: "No topics available yet. Create a goal to get started.",
+        gapDays,
+        gapResolved,
       })
       .returning();
-    return { plan, tasks: [] };
+    return { plan, tasks: [], fallbackUsed: false };
   }
 
   const generated = await generateDailyPlanWithAI(
@@ -156,6 +177,8 @@ export async function generateDailyPlan(
       planDate: today,
       availableMinutes,
       aiRationale: generated.aiRationale,
+      gapDays,
+      gapResolved,
     })
     .returning();
 
@@ -193,5 +216,5 @@ export async function generateDailyPlan(
     .where(eq(dailyPlanTasks.planId, plan.id))
     .orderBy(asc(dailyPlanTasks.orderIndex));
 
-  return { plan, tasks };
+  return { plan, tasks, fallbackUsed: generated.fallbackUsed };
 }

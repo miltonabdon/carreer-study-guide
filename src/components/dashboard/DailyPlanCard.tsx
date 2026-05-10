@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect } from "react";
 import { TaskItem } from "./TaskItem";
-import { Brain, Pencil, Check, X } from "lucide-react";
+import { Brain, Pencil, Check, X, AlertTriangle } from "lucide-react";
 
 interface PlanTask {
   id: string;
@@ -25,6 +25,7 @@ interface DailyPlanCardProps {
     aiRationale: string | null;
     completionPercent: number;
     tasks: PlanTask[];
+    fallbackUsed?: boolean;
   };
   onTaskComplete: (taskId: string, data: { status: "completed" | "skipped"; durationMinutes?: number; confidenceRating?: number; notes?: string }) => Promise<void>;
   onRegenerate?: (minutes: number) => Promise<void>;
@@ -143,6 +144,16 @@ export function DailyPlanCard({ plan, onTaskComplete, onRegenerate }: DailyPlanC
           ))
         )}
       </div>
+
+      {/* Fallback banner */}
+      {plan.fallbackUsed && (
+        <div className="px-4 pb-2">
+          <div className="flex items-center gap-2 rounded-md bg-amber-50 border border-amber-200 px-3 py-2">
+            <AlertTriangle className="h-3.5 w-3.5 text-amber-500 shrink-0" />
+            <p className="text-xs text-amber-700">IA indisponível — plano gerado por regras internas</p>
+          </div>
+        </div>
+      )}
 
       {/* AI Rationale */}
       {plan.aiRationale && (

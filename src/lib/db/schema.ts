@@ -4,6 +4,7 @@ import {
   varchar,
   text,
   integer,
+  boolean,
   timestamp,
   date,
   real,
@@ -37,6 +38,7 @@ export const users = pgTable("users", {
   displayName: varchar("display_name", { length: 100 }).notNull(),
   dailyAvailableMinutes: integer("daily_available_minutes").notNull().default(60),
   timezone: varchar("timezone", { length: 50 }).notNull().default("UTC"),
+  onboardingCompleted: boolean("onboarding_completed").notNull().default(false),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });
@@ -161,6 +163,8 @@ export const dailyPlans = pgTable("daily_plans", {
   availableMinutes: integer("available_minutes").notNull(),
   status: planStatusEnum("status").notNull().default("active"),
   aiRationale: text("ai_rationale"),
+  gapDays: integer("gap_days"),
+  gapResolved: boolean("gap_resolved").notNull().default(true),
 });
 
 // ─── Daily Plan Tasks ─────────────────────────────────────────────────────────

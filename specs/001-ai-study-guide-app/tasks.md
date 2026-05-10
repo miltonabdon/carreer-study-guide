@@ -27,9 +27,9 @@
 
 **Purpose**: Schema additions required before any Etapa 4 story can proceed
 
-- [ ] T001 Add `onboardingCompleted` boolean (default false) to users table in `src/lib/db/schema.ts` and run `npx drizzle-kit push`
-- [ ] T002 Add `gapDays` INT nullable and `gapResolved` boolean (default true) columns to `dailyPlans` table in `src/lib/db/schema.ts` and run `npx drizzle-kit push`
-- [ ] T003 [P] Create directory `src/app/onboarding/` and `src/app/settings/` with empty placeholder files
+- [x] T001 Add `onboardingCompleted` boolean (default false) to users table in `src/lib/db/schema.ts` and run `npx drizzle-kit push`
+- [x] T002 Add `gapDays` INT nullable and `gapResolved` boolean (default true) columns to `dailyPlans` table in `src/lib/db/schema.ts` and run `npx drizzle-kit push`
+- [x] T003 [P] Create directory `src/app/onboarding/` and `src/app/settings/` with empty placeholder files
 
 ---
 
@@ -39,8 +39,8 @@
 
 **⚠️ CRITICAL**: Must complete before US1 story work begins
 
-- [ ] T004 Update `src/middleware.ts` to redirect authenticated users with `onboardingCompleted = false` (read from JWT session) to `/onboarding` instead of `/dashboard`; add `/onboarding` to the list of public-accessible paths
-- [ ] T005 [P] Update `src/lib/auth.ts` to include `onboardingCompleted: boolean` in the session user object (read from DB on session creation) so middleware can check it without an extra DB round-trip
+- [x] T004 Update `src/middleware.ts` to redirect authenticated users with `onboardingCompleted = false` (read from JWT session) to `/onboarding` instead of `/dashboard`; add `/onboarding` to the list of public-accessible paths
+- [x] T005 [P] Update `src/lib/auth.ts` to include `onboardingCompleted: boolean` in the session user object (read from DB on session creation) so middleware can check it without an extra DB round-trip
 
 **Checkpoint**: Middleware updated — onboarding redirect active, US1 implementation can begin
 
@@ -54,11 +54,11 @@
 
 ### Implementation
 
-- [ ] T006 [US1] Create `src/app/onboarding/layout.tsx` — minimal layout without NavBar (same pattern as `src/app/(auth)/layout.tsx`)
-- [ ] T007 [US1] Create `src/app/onboarding/page.tsx` — 2-step wizard: Step 1 = goal title input + description textarea; Step 2 = priority select (high/medium/low) + optional target date input + daily minutes slider (15–180, default 60); local state tracks current step; "Back" / "Next" / "Start Learning" buttons
-- [ ] T008 [US1] Create `src/app/api/account/onboarding/route.ts` — POST endpoint: validates body with Zod (title, description, priority, targetDate?, dailyMinutes), updates `users.dailyAvailableMinutes`, calls `POST /api/goals` internally with goal data, sets `users.onboardingCompleted = true`, returns `{ goalId }`
-- [ ] T009 [US1] Update `src/app/api/auth/register/route.ts` to set `onboardingCompleted: false` in the INSERT values for new users
-- [ ] T010 [US1] Wire `src/app/onboarding/page.tsx` to POST to `/api/account/onboarding` on final step submit; show spinner during the request (AI path generation can take up to 10s); on success redirect to `/dashboard`; on error show inline error message with retry
+- [x] T006 [US1] Create `src/app/onboarding/layout.tsx` — minimal layout without NavBar (same pattern as `src/app/(auth)/layout.tsx`)
+- [x] T007 [US1] Create `src/app/onboarding/page.tsx` — 2-step wizard: Step 1 = goal title input + description textarea; Step 2 = priority select (high/medium/low) + optional target date input + daily minutes slider (15–180, default 60); local state tracks current step; "Back" / "Next" / "Start Learning" buttons
+- [x] T008 [US1] Create `src/app/api/account/onboarding/route.ts` — POST endpoint: validates body with Zod (title, description, priority, targetDate?, dailyMinutes), updates `users.dailyAvailableMinutes`, calls `POST /api/goals` internally with goal data, sets `users.onboardingCompleted = true`, returns `{ goalId }`
+- [x] T009 [US1] Update `src/app/api/auth/register/route.ts` to set `onboardingCompleted: false` in the INSERT values for new users
+- [x] T010 [US1] Wire `src/app/onboarding/page.tsx` to POST to `/api/account/onboarding` on final step submit; show spinner during the request (AI path generation can take up to 10s); on success redirect to `/dashboard`; on error show inline error message with retry
 
 **Checkpoint**: New user registration → wizard → dashboard. Existing users bypass wizard.
 
@@ -72,12 +72,12 @@
 
 ### Implementation
 
-- [ ] T011 [US2] Update `generateLearningPath()` in `src/lib/ai/generate.ts` — wrap `generateObject()` in try/catch; on any error fall back to `mockLearningPath()` and append `fallbackUsed: true` to the return value; update the return type to include `fallbackUsed: boolean`
-- [ ] T012 [US2] Update `generateDailyPlanWithAI()` in `src/lib/ai/generate.ts` — same pattern: wrap `generateObject()` in try/catch, fall back to mock logic, return `fallbackUsed: boolean`
-- [ ] T013 [US2] Update `src/app/api/goals/route.ts` POST to forward `fallbackUsed` from `generateLearningPath()` in the response body
-- [ ] T014 [US2] Update `src/app/api/plans/today/route.ts` GET to include `fallbackUsed: boolean` in the plan response object
-- [ ] T015 [P] [US2] Update `src/components/dashboard/DailyPlanCard.tsx` to render an amber info banner when `plan.fallbackUsed === true`: "IA indisponível — plano gerado por regras internas"
-- [ ] T016 [P] [US2] Update `src/components/goals/GoalCreateForm.tsx` to show amber banner when `response.path?.fallbackUsed === true` after goal creation: "IA indisponível — caminho de aprendizado padrão gerado"
+- [x] T011 [US2] Update `generateLearningPath()` in `src/lib/ai/generate.ts` — wrap `generateObject()` in try/catch; on any error fall back to `mockLearningPath()` and append `fallbackUsed: true` to the return value; update the return type to include `fallbackUsed: boolean`
+- [x] T012 [US2] Update `generateDailyPlanWithAI()` in `src/lib/ai/generate.ts` — same pattern: wrap `generateObject()` in try/catch, fall back to mock logic, return `fallbackUsed: boolean`
+- [x] T013 [US2] Update `src/app/api/goals/route.ts` POST to forward `fallbackUsed` from `generateLearningPath()` in the response body
+- [x] T014 [US2] Update `src/app/api/plans/today/route.ts` GET to include `fallbackUsed: boolean` in the plan response object
+- [x] T015 [P] [US2] Update `src/components/dashboard/DailyPlanCard.tsx` to render an amber info banner when `plan.fallbackUsed === true`: "IA indisponível — plano gerado por regras internas"
+- [x] T016 [P] [US2] Update `src/components/goals/GoalCreateForm.tsx` to show amber banner when `response.path?.fallbackUsed === true` after goal creation: "IA indisponível — caminho de aprendizado padrão gerado"
 
 **Checkpoint**: App works end-to-end with invalid API key. Amber banners appear. Zero 500 errors.
 
@@ -91,11 +91,11 @@
 
 ### Implementation
 
-- [ ] T017 [US3] Verify `src/lib/db/schema.ts` has `onDelete: "cascade"` on all FK relations from `users.id` (learningGoals, dailyPlans, studySessions); add missing cascades and run `npx drizzle-kit push`
-- [ ] T018 [US3] Create `src/app/api/account/export/route.ts` — GET endpoint (authenticated): queries all data for `session.user.id` (goals → paths → topics, studySessions, dailyPlans with tasks); returns JSON response with header `Content-Disposition: attachment; filename="studyguide-export-YYYY-MM-DD.json"`
-- [ ] T019 [US3] Create `src/app/api/account/delete/route.ts` — DELETE endpoint (authenticated): deletes the `users` row (cascade handles children), returns 204; client should then call `signOut()` from NextAuth
-- [ ] T020 [US3] Create `src/app/settings/page.tsx` — settings page with two sections: "Exportar meus dados" button (triggers download via anchor with `href=/api/account/export`) and "Excluir conta" section with confirmation dialog (`window.confirm` or inline toggle) that calls `DELETE /api/account/delete` then `signOut({ callbackUrl: '/login' })`
-- [ ] T021 [US3] Add "Configurações" nav link to `src/components/layout/NavBar.tsx` pointing to `/settings`
+- [x] T017 [US3] Verify `src/lib/db/schema.ts` has `onDelete: "cascade"` on all FK relations from `users.id` (learningGoals, dailyPlans, studySessions); add missing cascades and run `npx drizzle-kit push`
+- [x] T018 [US3] Create `src/app/api/account/export/route.ts` — GET endpoint (authenticated): queries all data for `session.user.id` (goals → paths → topics, studySessions, dailyPlans with tasks); returns JSON response with header `Content-Disposition: attachment; filename="studyguide-export-YYYY-MM-DD.json"`
+- [x] T019 [US3] Create `src/app/api/account/delete/route.ts` — DELETE endpoint (authenticated): deletes the `users` row (cascade handles children), returns 204; client should then call `signOut()` from NextAuth
+- [x] T020 [US3] Create `src/app/settings/page.tsx` — settings page with two sections: "Exportar meus dados" button (triggers download via anchor with `href=/api/account/export`) and "Excluir conta" section with confirmation dialog (`window.confirm` or inline toggle) that calls `DELETE /api/account/delete` then `signOut({ callbackUrl: '/login' })`
+- [x] T021 [US3] Add "Configurações" nav link to `src/components/layout/NavBar.tsx` pointing to `/settings`
 
 **Checkpoint**: Settings accessible from nav. Export downloads valid JSON. Delete removes account.
 
@@ -109,11 +109,11 @@
 
 ### Implementation
 
-- [ ] T022 [US4] Update `src/lib/planner/index.ts` `generateDailyPlan()`: after generating the plan, query the most recent `dailyPlans.planDate` for the user; if gap ≥ 2 days, set `gapDays = <number of missed days>` and `gapResolved = false` on the inserted plan row
-- [ ] T023 [US4] Create `src/app/api/plans/today/gap-resolve/route.ts` — POST endpoint accepting `{ choice: "recover" | "resume" }`: if "resume" sets `gapResolved = true` on today's plan; if "recover" sets `gapResolved = true` and creates placeholder `dailyPlans` for the next `gapDays` days each with a proportional subset of today's pending tasks; returns updated plan
-- [ ] T024 [US4] Update `src/app/api/plans/today/route.ts` GET response to include `gapDays: number | null` and `gapResolved: boolean` fields from the plan row
-- [ ] T025 [US4] Create `src/components/dashboard/GapRecoveryModal.tsx` — modal rendered when `plan.gapDays >= 2 && !plan.gapResolved`; shows "Você ficou X dias sem estudar" + two buttons: "Recuperar conteúdo perdido (próximos X dias)" and "Retomar com carga normal hoje"; on button click calls `POST /api/plans/today/gap-resolve`, updates local plan state, closes modal
-- [ ] T026 [US4] Update `src/app/dashboard/page.tsx` to import and render `<GapRecoveryModal>` when `plan?.gapDays >= 2 && !plan?.gapResolved`, overlaying the DailyPlanCard until choice is made
+- [x] T022 [US4] Update `src/lib/planner/index.ts` `generateDailyPlan()`: after generating the plan, query the most recent `dailyPlans.planDate` for the user; if gap ≥ 2 days, set `gapDays = <number of missed days>` and `gapResolved = false` on the inserted plan row
+- [x] T023 [US4] Create `src/app/api/plans/today/gap-resolve/route.ts` — POST endpoint accepting `{ choice: "recover" | "resume" }`: if "resume" sets `gapResolved = true` on today's plan; if "recover" sets `gapResolved = true` and creates placeholder `dailyPlans` for the next `gapDays` days each with a proportional subset of today's pending tasks; returns updated plan
+- [x] T024 [US4] Update `src/app/api/plans/today/route.ts` GET response to include `gapDays: number | null` and `gapResolved: boolean` fields from the plan row
+- [x] T025 [US4] Create `src/components/dashboard/GapRecoveryModal.tsx` — modal rendered when `plan.gapDays >= 2 && !plan.gapResolved`; shows "Você ficou X dias sem estudar" + two buttons: "Recuperar conteúdo perdido (próximos X dias)" and "Retomar com carga normal hoje"; on button click calls `POST /api/plans/today/gap-resolve`, updates local plan state, closes modal
+- [x] T026 [US4] Update `src/app/dashboard/page.tsx` to import and render `<GapRecoveryModal>` when `plan?.gapDays >= 2 && !plan?.gapResolved`, overlaying the DailyPlanCard until choice is made
 
 **Checkpoint**: Gap detected → modal shown → choice recorded → plan reflects recovery strategy.
 
@@ -121,8 +121,8 @@
 
 ## Phase 7: Polish & Cross-Cutting Concerns
 
-- [ ] T027 [P] Update `src/app/api/goals/[goalId]/path/regenerate/route.ts` to wrap AI call in try/catch with fallback (same pattern as T011) for consistency
-- [ ] T028 [P] Add error boundary around `src/app/onboarding/page.tsx` wizard: if API call fails show inline retry button, not a broken page
+- [x] T027 [P] Update `src/app/api/goals/[goalId]/path/regenerate/route.ts` to wrap AI call in try/catch with fallback (same pattern as T011) for consistency
+- [x] T028 [P] Add error boundary around `src/app/onboarding/page.tsx` wizard: if API call fails show inline retry button, not a broken page
 - [ ] T029 [P] Update `specs/001-ai-study-guide-app/data-model.md` to document new fields: `users.onboardingCompleted`, `dailyPlans.gapDays`, `dailyPlans.gapResolved`
 - [ ] T030 Run full production smoke test after all stories: register → onboarding → dashboard → complete task → settings export → verify JSON contains all data; commit and push to trigger Vercel deploy
 

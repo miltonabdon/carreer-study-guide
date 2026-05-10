@@ -38,21 +38,29 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           id: user.id,
           email: user.email,
           name: user.displayName,
+          onboardingCompleted: user.onboardingCompleted,
         };
       },
     }),
   ],
   callbacks: {
-    jwt({ token, user }) {
+    jwt({ token, user, trigger, session }) {
       if (user) {
         token.id = user.id;
+        token.onboardingCompleted = (user as { onboardingCompleted?: boolean }).onboardingCompleted ?? false;
+      }
+      const updateData = session as { onboardingCompleted?: boolean } | undefined;
+      if (trigger === "update" && updateData?.onboardingCompleted !== undefined) {
+        token.onboardingCompleted = updateData.onboardingCompleted;
       }
       return token;
     },
     session({ session, token }) {
+      const user = session.user as { id?: string; onboardingCompleted?: boolean };
       if (token.id) {
-        session.user.id = token.id as string;
+        user.id = token.id as string;
       }
+      user.onboardingCompleted = (token.onboardingCompleted as boolean) ?? false;
       return session;
     },
   },

@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Plus } from "lucide-react";
 import { DailyPlanCard } from "@/components/dashboard/DailyPlanCard";
+import { GapRecoveryModal } from "@/components/dashboard/GapRecoveryModal";
 import { StreakBadge } from "@/components/dashboard/StreakBadge";
 
 interface PlanTask {
@@ -26,6 +27,9 @@ interface DailyPlan {
   aiRationale: string | null;
   completionPercent: number;
   tasks: PlanTask[];
+  fallbackUsed?: boolean;
+  gapDays?: number | null;
+  gapResolved?: boolean;
 }
 
 export default function DashboardPage() {
@@ -77,6 +81,17 @@ export default function DashboardPage() {
     }
   }
 
+  async function handleGapResolve(choice: "recover" | "resume") {
+    const res = await fetch("/api/plans/today/gap-resolve", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ choice }),
+    });
+    if (res.ok) {
+      await fetchPlan();
+    }
+  }
+
   const overdueCount =
     plan?.tasks.filter(
       (t) =>
@@ -86,8 +101,13 @@ export default function DashboardPage() {
         t.status === "pending"
     ).length ?? 0;
 
+  const showGapModal = plan && (plan.gapDays ?? 0) >= 2 && !plan.gapResolved;
+
   return (
     <div className="max-w-2xl mx-auto p-6">
+      {showGapModal && (
+        <GapRecoveryModal gapDays={plan!.gapDays!} onResolve={handleGapResolve} />
+      )}
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div>

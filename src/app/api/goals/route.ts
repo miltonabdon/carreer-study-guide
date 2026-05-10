@@ -140,7 +140,7 @@ export async function POST(request: Request) {
     });
 
     return NextResponse.json(
-      { ...goal, path: { ...path, paceWarning: generated.paceWarning } },
+      { ...goal, path: { ...path, paceWarning: generated.paceWarning, fallbackUsed: generated.fallbackUsed } },
       { status: 201 }
     );
   } catch (err) {

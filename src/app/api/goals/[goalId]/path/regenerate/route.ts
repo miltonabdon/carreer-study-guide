@@ -93,7 +93,7 @@ export async function POST(_request: Request, { params }: RouteContext) {
   await db.insert(topics).values(topicRows);
 
   return NextResponse.json(
-    { path: { ...newPath, paceWarning: generated.paceWarning } },
+    { path: { ...newPath, paceWarning: generated.paceWarning, fallbackUsed: generated.fallbackUsed } },
     { status: 201 }
   );
 }

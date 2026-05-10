@@ -3,17 +3,27 @@ import { NextResponse } from "next/server";
 
 export default auth((req) => {
   const isLoggedIn = !!req.auth;
-  const isAuthRoute = req.nextUrl.pathname.startsWith("/login") ||
-    req.nextUrl.pathname.startsWith("/register");
+  const { pathname } = req.nextUrl;
+
+  const isAuthRoute = pathname.startsWith("/login") || pathname.startsWith("/register");
+  const isOnboardingRoute = pathname.startsWith("/onboarding");
 
   if (!isLoggedIn && !isAuthRoute) {
     const loginUrl = new URL("/login", req.nextUrl.origin);
-    loginUrl.searchParams.set("callbackUrl", req.nextUrl.pathname);
+    loginUrl.searchParams.set("callbackUrl", pathname);
     return NextResponse.redirect(loginUrl);
   }
 
   if (isLoggedIn && isAuthRoute) {
     return NextResponse.redirect(new URL("/dashboard", req.nextUrl.origin));
+  }
+
+  if (isLoggedIn && !isOnboardingRoute) {
+    const user = req.auth?.user as { onboardingCompleted?: boolean } | undefined;
+    const onboardingCompleted = user?.onboardingCompleted ?? true;
+    if (!onboardingCompleted) {
+      return NextResponse.redirect(new URL("/onboarding", req.nextUrl.origin));
+    }
   }
 
   return NextResponse.next();
