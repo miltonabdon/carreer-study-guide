@@ -6,6 +6,6 @@ export function getRedisClient(): Redis | null {
   if (redis) return redis;
   const url = process.env.REDIS_URL;
   if (!url) return null;
-  redis = new Redis(url, { lazyConnect: true, enableOfflineQueue: false, maxRetriesPerRequest: 1 });
+  redis = new Redis(url, { lazyConnect: true, maxRetriesPerRequest: 1 });
   return redis;
 }
