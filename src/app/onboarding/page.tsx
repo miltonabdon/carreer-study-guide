@@ -36,7 +36,9 @@ export default function OnboardingPage() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Something went wrong");
       await update({ onboardingCompleted: true });
-      router.push("/dashboard");
+      // Small delay ensures Set-Cookie from update() is processed before navigation
+      await new Promise((r) => setTimeout(r, 200));
+      window.location.href = "/dashboard";
     } catch (err) {
       setError(err instanceof Error ? err.message : "Unexpected error");
       setLoading(false);
