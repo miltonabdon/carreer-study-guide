@@ -101,12 +101,7 @@ export async function POST(request: Request) {
 
     if (!user) return NextResponse.json({ error: "User not found" }, { status: 404 });
 
-    const [goal] = await db
-      .insert(learningGoals)
-      .values({ userId: session.user.id, title, description, priority, targetDate })
-      .returning();
-
-    // Generate AI learning path
+    // Generate path before DB writes so a failure leaves no orphan
     const generated = await generateLearningPath(
       title,
       description,
@@ -114,27 +109,35 @@ export async function POST(request: Request) {
       user.dailyAvailableMinutes
     );
 
-    const [path] = await db
-      .insert(learningPaths)
-      .values({
-        goalId: goal.id,
-        totalEstimatedMinutes: generated.totalEstimatedMinutes,
-        completionWeeksEstimate: generated.completionWeeksEstimate,
-      })
-      .returning();
+    const userId = session.user!.id as string;
+    const { goal, path } = await db.transaction(async (tx) => {
+      const [goal] = await tx
+        .insert(learningGoals)
+        .values({ userId, title, description, priority, targetDate })
+        .returning();
 
-    // Insert topics — first topic unlocked, rest locked
-    const topicRows = generated.topics.map((t, i) => ({
-      pathId: path.id,
-      title: t.title,
-      description: t.description,
-      orderIndex: t.orderIndex,
-      complexity: t.complexity,
-      estimatedMinutes: t.estimatedMinutes,
-      status: i === 0 ? ("unlocked" as const) : ("locked" as const),
-    }));
+      const [path] = await tx
+        .insert(learningPaths)
+        .values({
+          goalId: goal.id,
+          totalEstimatedMinutes: generated.totalEstimatedMinutes,
+          completionWeeksEstimate: generated.completionWeeksEstimate,
+        })
+        .returning();
 
-    await db.insert(topics).values(topicRows);
+      const topicRows = generated.topics.map((t, i) => ({
+        pathId: path.id,
+        title: t.title,
+        description: t.description,
+        orderIndex: t.orderIndex,
+        complexity: t.complexity,
+        estimatedMinutes: t.estimatedMinutes,
+        status: i === 0 ? ("unlocked" as const) : ("locked" as const),
+      }));
+
+      await tx.insert(topics).values(topicRows);
+      return { goal, path };
+    });
 
     return NextResponse.json(
       { ...goal, path: { ...path, paceWarning: generated.paceWarning } },

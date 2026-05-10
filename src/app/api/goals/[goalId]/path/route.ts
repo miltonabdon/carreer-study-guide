@@ -1,8 +1,9 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
-import { learningGoals, learningPaths, topics } from "@/lib/db/schema";
+import { learningGoals, learningPaths, topics, users } from "@/lib/db/schema";
 import { eq, and, asc } from "drizzle-orm";
+import { generateLearningPath } from "@/lib/ai/generate";
 
 type RouteContext = { params: Promise<{ goalId: string }> };
 
@@ -22,13 +23,49 @@ export async function GET(_request: Request, { params }: RouteContext) {
 
   if (!goal) return NextResponse.json({ error: "Goal not found" }, { status: 404 });
 
-  const [path] = await db
+  let [path] = await db
     .select()
     .from(learningPaths)
     .where(and(eq(learningPaths.goalId, goalId), eq(learningPaths.status, "active")))
     .limit(1);
 
-  if (!path) return NextResponse.json({ error: "No active learning path" }, { status: 404 });
+  // Auto-generate path if missing (e.g. previous creation failed mid-way)
+  if (!path) {
+    const [user] = await db
+      .select({ dailyAvailableMinutes: users.dailyAvailableMinutes })
+      .from(users)
+      .where(eq(users.id, session.user.id))
+      .limit(1);
+
+    const generated = await generateLearningPath(
+      goal.title,
+      goal.description,
+      `Software architect with computer engineering and cloud/mobile postgrad background, interest in AI/ML`,
+      user?.dailyAvailableMinutes ?? 60
+    );
+
+    const [newPath] = await db
+      .insert(learningPaths)
+      .values({
+        goalId: goal.id,
+        totalEstimatedMinutes: generated.totalEstimatedMinutes,
+        completionWeeksEstimate: generated.completionWeeksEstimate,
+      })
+      .returning();
+
+    const topicRows = generated.topics.map((t, i) => ({
+      pathId: newPath.id,
+      title: t.title,
+      description: t.description,
+      orderIndex: t.orderIndex,
+      complexity: t.complexity,
+      estimatedMinutes: t.estimatedMinutes,
+      status: i === 0 ? ("unlocked" as const) : ("locked" as const),
+    }));
+
+    await db.insert(topics).values(topicRows);
+    path = newPath;
+  }
 
   const topicList = await db
     .select()
