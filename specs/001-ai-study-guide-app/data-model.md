@@ -105,7 +105,7 @@ A discrete unit of knowledge within a learning path. Maps to FR-009, FR-010, FR-
 | `order_index` | INT | NOT NULL | Position in path (0-based) |
 | `complexity` | INT | NOT NULL, CHECK 1-5 | 1=beginner, 5=expert |
 | `estimated_minutes` | INT | NOT NULL | Suggested study time |
-| `status` | ENUM | NOT NULL, DEFAULT 'locked' | See state transitions |
+| `status` | ENUM | NOT NULL, DEFAULT 'locked' | `locked`, `unlocked`, `in_progress`, `complete`, `skipped`, `known` — see state transitions |
 | `resource_url` | TEXT | NULLABLE | User-attached external link (FR-011) |
 | `notes` | TEXT | NULLABLE | User personal notes |
 | `created_at` | TIMESTAMP | NOT NULL | |
@@ -126,13 +126,18 @@ A discrete unit of knowledge within a learning path. Maps to FR-009, FR-010, FR-
 
 **State transitions**:
 ```
-locked     → unlocked    (previous topic marked complete, or first topic in path)
-unlocked   → in_progress (user starts a study session)
-in_progress → complete   (user logs session with confidence ≥ 3)
-unlocked   → skipped     (user marks as "already known" — FR-010)
-skipped    → unlocked    (user un-skips)
-complete   → in_progress (review session started for complete topic)
+locked      → unlocked    (previous topic marked complete or known, or first topic in path)
+unlocked    → in_progress (daily plan task completed with confidence ≤ 2, FSRS "Learning" state)
+unlocked    → complete    (user clicks "Concluir" on path view — explicit completion)
+unlocked    → known       (user clicks "Já sei" — already mastered; keeps review rotation — FR-010)
+in_progress → complete    (user logs session with confidence ≥ 3, FSRS "Review" state)
+unlocked    → skipped     (user explicitly skips topic in path view)
+skipped     → unlocked    (user un-skips)
+complete    → in_progress (review session rated ≤ 2, re-enters learning queue)
+known       → in_progress (review session rated ≤ 2, re-enters learning queue)
 ```
+
+*Note: `in_progress` is a transient FSRS state, not manually set by the user. Topics transition directly from `unlocked` to `complete` on the path view; `in_progress` is only reached via the daily plan task flow when FSRS determines more learning is needed.*
 
 **Validation rules**:
 - `order_index` must be unique within a path
@@ -179,7 +184,7 @@ The AI-generated set of study tasks for a specific calendar day. Maps to FR-003,
 | `available_minutes` | INT | NOT NULL | User's daily limit at generation time |
 | `status` | ENUM | NOT NULL, DEFAULT 'active' | `active`, `completed`, `expired` |
 | `ai_rationale` | TEXT | NULLABLE | Optional AI explanation of today's priorities |
-| `gap_days` | INT | NULLABLE | Number of consecutive missed study days detected before this plan was generated; null when no gap (FR-018) |
+| `gap_days` | INT | NULLABLE | Number of consecutive missed study days detected before this plan was generated; null when no gap (see Edge Case: missed-day recovery in spec.md) |
 | `gap_resolved` | BOOLEAN | NOT NULL, DEFAULT true | Whether the user has responded to the missed-day recovery modal; false triggers `GapRecoveryModal` on the dashboard until resolved |
 
 **Unique constraint**: `(user_id, plan_date)` — one plan per user per day
