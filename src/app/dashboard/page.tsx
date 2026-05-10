@@ -6,6 +6,7 @@ import { Plus } from "lucide-react";
 import { DailyPlanCard } from "@/components/dashboard/DailyPlanCard";
 import { GapRecoveryModal } from "@/components/dashboard/GapRecoveryModal";
 import { StreakBadge } from "@/components/dashboard/StreakBadge";
+import { AITechSuggestions } from "@/components/dashboard/AITechSuggestions";
 
 interface PlanTask {
   id: string;
@@ -36,6 +37,7 @@ export default function DashboardPage() {
   const [plan, setPlan] = useState<DailyPlan | null>(null);
   const [loading, setLoading] = useState(true);
   const [streak, setStreak] = useState(0);
+  const [goalTitles, setGoalTitles] = useState<string[]>([]);
 
   async function fetchPlan() {
     const res = await fetch("/api/plans/today");
@@ -48,10 +50,13 @@ export default function DashboardPage() {
 
   useEffect(() => {
     fetchPlan();
-    // Fetch streak from progress API when it's available
     fetch("/api/progress")
       .then((r) => r.json())
       .then((d) => setStreak(d?.streaks?.current ?? 0))
+      .catch(() => {});
+    fetch("/api/goals")
+      .then((r) => r.json())
+      .then((d: Array<{ title: string }>) => setGoalTitles(Array.isArray(d) ? d.map((g) => g.title) : []))
       .catch(() => {});
   }, []);
 
@@ -157,6 +162,9 @@ export default function DashboardPage() {
           </button>
         </div>
       )}
+
+      {/* AI Technique Suggestions */}
+      <AITechSuggestions existingGoalTitles={goalTitles} />
     </div>
   );
 }

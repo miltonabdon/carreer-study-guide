@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { dailyPlans, dailyPlanTasks, topics, learningPaths, learningGoals } from "@/lib/db/schema";
-import { eq, and, asc } from "drizzle-orm";
+import { eq, and, asc, count } from "drizzle-orm";
 import { generateDailyPlan } from "@/lib/planner";
 import { getRedisClient } from "@/lib/redis";
 
@@ -83,6 +83,23 @@ export async function GET() {
   let planData;
   if (existing) {
     planData = await getPlanWithTasks(existing.id);
+
+    // If plan exists but has 0 tasks, check whether goals now have available content.
+    // This happens when the plan was generated before a goal was created (e.g. by the
+    // email cron) or before any topic was unlocked. Re-generate so the user sees tasks.
+    if (planData && planData.tasks.length === 0) {
+      const [{ activeGoals }] = await db
+        .select({ activeGoals: count() })
+        .from(learningGoals)
+        .where(and(eq(learningGoals.userId, userId), eq(learningGoals.status, "active")));
+
+      if (activeGoals > 0) {
+        await db.delete(dailyPlans).where(eq(dailyPlans.id, existing.id));
+        if (redis) await redis.del(cacheKey).catch(() => null);
+        const generated = await generateDailyPlan(userId, today);
+        planData = { ...generated.plan, tasks: generated.tasks, completionPercent: 0, fallbackUsed: generated.fallbackUsed };
+      }
+    }
   } else {
     const generated = await generateDailyPlan(userId, today);
     planData = { ...generated.plan, tasks: generated.tasks, completionPercent: 0, fallbackUsed: generated.fallbackUsed };
