@@ -41,6 +41,7 @@ export function TopicNode({ topic, onUpdate, onComplete }: TopicNodeProps) {
   const [completeDuration, setCompleteDuration] = useState(topic.estimatedMinutes);
   const [completeConfidence, setCompleteConfidence] = useState(3);
   const [completing, setCompleting] = useState(false);
+  const [completeError, setCompleteError] = useState<string | null>(null);
 
   const ytVideoId = topic.resourceUrl ? getYouTubeVideoId(topic.resourceUrl) : null;
 
@@ -64,6 +65,7 @@ export function TopicNode({ topic, onUpdate, onComplete }: TopicNodeProps) {
 
   async function handleComplete() {
     setCompleting(true);
+    setCompleteError(null);
     try {
       const res = await fetch(`/api/topics/${topic.id}/complete`, {
         method: "POST",
@@ -76,7 +78,12 @@ export function TopicNode({ topic, onUpdate, onComplete }: TopicNodeProps) {
       if (res.ok) {
         setShowComplete(false);
         onComplete?.();
+      } else {
+        const data = await res.json().catch(() => ({}));
+        setCompleteError(data.error ?? `Erro ${res.status}`);
       }
+    } catch {
+      setCompleteError("Erro de rede. Tente novamente.");
     } finally {
       setCompleting(false);
     }
@@ -282,9 +289,12 @@ export function TopicNode({ topic, onUpdate, onComplete }: TopicNodeProps) {
               </div>
             </div>
           </div>
+          {completeError && (
+            <p className="text-xs text-red-600 font-medium">{completeError}</p>
+          )}
           <div className="flex gap-2 justify-end">
             <button
-              onClick={() => setShowComplete(false)}
+              onClick={() => { setShowComplete(false); setCompleteError(null); }}
               className="text-xs px-3 py-1 rounded border hover:bg-muted"
             >
               Cancelar

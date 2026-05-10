@@ -97,15 +97,12 @@ export async function POST(request: Request, { params }: RouteContext) {
     const rating = Math.max(1, Math.min(5, confidenceRating)) as Rating;
     const { newCard } = reviewCard(card, rating, now);
 
-    let newTopicStatus: typeof topic.status = "complete";
-    if (newCard.state === "Relearning" || newCard.state === "Learning") {
-      newTopicStatus = "in_progress";
-    }
-
+    // Explicit "Concluir" always marks the topic complete and unlocks the next.
+    // FSRS state drives the review schedule; it does not gate topic completion here.
     await tx
       .update(topics)
       .set({
-        status: newTopicStatus,
+        status: "complete",
         fsrsState: newCard.state,
         fsrsStability: newCard.stability,
         fsrsDifficulty: newCard.difficulty,
@@ -117,7 +114,7 @@ export async function POST(request: Request, { params }: RouteContext) {
       })
       .where(eq(topics.id, topicId));
 
-    if (newTopicStatus === "complete") {
+    {
       const pathTopics = await tx
         .select({ id: topics.id, status: topics.status })
         .from(topics)
