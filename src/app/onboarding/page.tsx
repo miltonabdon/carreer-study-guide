@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
+import { AIGenerationProgress } from "@/components/ui/AIGenerationProgress";
 
 export default function OnboardingPage() {
   const router = useRouter();
@@ -40,6 +41,44 @@ export default function OnboardingPage() {
       setError(err instanceof Error ? err.message : "Unexpected error");
       setLoading(false);
     }
+  }
+
+  if (loading) {
+    return (
+      <div className="bg-white rounded-2xl shadow-lg w-full max-w-lg p-8">
+        <div className="py-4 flex flex-col items-center">
+          {/* Animated icon */}
+          <div className="relative mb-7">
+            <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center shadow-lg shadow-blue-200/60">
+              <svg className="w-8 h-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5}
+                  d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z" />
+              </svg>
+            </div>
+            <span className="absolute -top-1 -right-1 flex h-4 w-4">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75" />
+              <span className="relative inline-flex rounded-full h-4 w-4 bg-green-400" />
+            </span>
+          </div>
+
+          <h2 className="text-xl font-bold text-gray-900 mb-1 text-center">
+            Criando sua trilha de aprendizado
+          </h2>
+          <p className="text-sm text-gray-500 text-center mb-8 max-w-xs">
+            A IA está estruturando um plano personalizado para{" "}
+            <span className="font-medium text-gray-700">&ldquo;{title}&rdquo;</span>
+          </p>
+
+          <div className="w-full">
+            <AIGenerationProgress />
+          </div>
+
+          <p className="text-xs text-gray-400 text-center mt-6">
+            Isso pode levar até 30 segundos — não feche esta janela
+          </p>
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -154,19 +193,9 @@ export default function OnboardingPage() {
             <button
               onClick={handleSubmit}
               disabled={loading}
-              className="flex-1 bg-blue-600 text-white rounded-lg px-4 py-2.5 text-sm font-medium hover:bg-blue-700 disabled:opacity-60 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
+              className="flex-1 bg-blue-600 text-white rounded-lg px-4 py-2.5 text-sm font-medium hover:bg-blue-700 disabled:opacity-60 disabled:cursor-not-allowed transition-colors"
             >
-              {loading ? (
-                <>
-                  <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24" fill="none">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-                  </svg>
-                  Gerando seu plano…
-                </>
-              ) : (
-                "Começar a aprender"
-              )}
+              Começar a aprender
             </button>
           </div>
         </div>

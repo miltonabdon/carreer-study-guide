@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { X, AlertTriangle } from "lucide-react";
+import { AIGenerationProgress } from "@/components/ui/AIGenerationProgress";
 
 interface GoalCreateFormProps {
   onClose: () => void;
@@ -56,6 +57,42 @@ export function GoalCreateForm({ onClose }: GoalCreateFormProps) {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm">
       <div className="w-full max-w-lg rounded-lg border bg-card p-6 shadow-lg">
+
+        {/* Loading overlay */}
+        {loading && (
+          <div className="py-4 flex flex-col items-center">
+            <div className="relative mb-6">
+              <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center shadow-lg shadow-blue-200/60">
+                <svg className="w-7 h-7 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5}
+                    d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z" />
+                </svg>
+              </div>
+              <span className="absolute -top-1 -right-1 flex h-3.5 w-3.5">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75" />
+                <span className="relative inline-flex rounded-full h-3.5 w-3.5 bg-green-400" />
+              </span>
+            </div>
+
+            <h3 className="text-lg font-semibold text-card-foreground mb-1 text-center">
+              Gerando trilha de aprendizado
+            </h3>
+            <p className="text-sm text-muted-foreground text-center mb-7 max-w-xs">
+              A IA está criando um caminho personalizado com base no seu objetivo
+            </p>
+
+            <div className="w-full">
+              <AIGenerationProgress />
+            </div>
+
+            <p className="text-xs text-muted-foreground/60 text-center mt-5">
+              Isso pode levar até 30 segundos
+            </p>
+          </div>
+        )}
+
+        {!loading && (
+        <>
         <div className="flex items-center justify-between mb-5">
           <h2 className="text-lg font-semibold">New Learning Goal</h2>
           <button onClick={onClose} className="text-muted-foreground hover:text-foreground">
@@ -140,19 +177,14 @@ export function GoalCreateForm({ onClose }: GoalCreateFormProps) {
             </button>
             <button
               type="submit"
-              disabled={loading}
-              className="flex-1 rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
+              className="flex-1 rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90"
             >
-              {loading ? "Generating path…" : "Create goal"}
+              Create goal
             </button>
           </div>
-
-          {loading && (
-            <p className="text-xs text-center text-muted-foreground">
-              AI is generating your personalized learning path…
-            </p>
-          )}
         </form>
+        </>
+        )}
       </div>
     </div>
   );
