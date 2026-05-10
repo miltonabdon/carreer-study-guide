@@ -171,7 +171,7 @@ export default function PathPage({ params }: { params: { goalId: string } }) {
         </div>
       </div>
 
-      <PathTimeline topics={data.topics} onTopicUpdate={handleTopicUpdate} />
+      <PathTimeline topics={data.topics} onTopicUpdate={handleTopicUpdate} onTopicComplete={fetchPath} />
     </div>
   );
 }

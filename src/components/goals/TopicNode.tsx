@@ -20,6 +20,7 @@ interface Topic {
 interface TopicNodeProps {
   topic: Topic;
   onUpdate: (topicId: string, data: Partial<Pick<Topic, "status" | "resourceUrl" | "notes">>) => void;
+  onComplete?: () => void;
 }
 
 const STATUS_STYLES: Record<Topic["status"], string> = {
@@ -30,7 +31,7 @@ const STATUS_STYLES: Record<Topic["status"], string> = {
   skipped: "border-muted-foreground/20 bg-muted/30 text-muted-foreground",
 };
 
-export function TopicNode({ topic, onUpdate }: TopicNodeProps) {
+export function TopicNode({ topic, onUpdate, onComplete }: TopicNodeProps) {
   const [showNotes, setShowNotes] = useState(false);
   const [notes, setNotes] = useState(topic.notes ?? "");
   const [resourceUrl, setResourceUrl] = useState(topic.resourceUrl ?? "");
@@ -73,8 +74,8 @@ export function TopicNode({ topic, onUpdate }: TopicNodeProps) {
         }),
       });
       if (res.ok) {
-        await onUpdate(topic.id, { status: "complete" });
         setShowComplete(false);
+        onComplete?.();
       }
     } finally {
       setCompleting(false);

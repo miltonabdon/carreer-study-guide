@@ -18,9 +18,10 @@ interface Topic {
 interface PathTimelineProps {
   topics: Topic[];
   onTopicUpdate: (topicId: string, data: Partial<Pick<Topic, "status" | "resourceUrl" | "notes">>) => void;
+  onTopicComplete?: () => void;
 }
 
-export function PathTimeline({ topics, onTopicUpdate }: PathTimelineProps) {
+export function PathTimeline({ topics, onTopicUpdate, onTopicComplete }: PathTimelineProps) {
   const ordered = [...topics].sort((a, b) => a.orderIndex - b.orderIndex);
 
   return (
@@ -45,7 +46,7 @@ export function PathTimeline({ topics, onTopicUpdate }: PathTimelineProps) {
                         : "bg-muted ring-muted-foreground/30"
               }`}
             />
-            <TopicNode topic={topic} onUpdate={onTopicUpdate} />
+            <TopicNode topic={topic} onUpdate={onTopicUpdate} onComplete={onTopicComplete} />
           </div>
         ))}
       </div>
