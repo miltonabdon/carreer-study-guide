@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { ExternalLink, StickyNote, SkipForward, Undo2, Clock, Zap, Play, CheckCircle, BookCheck } from "lucide-react";
+import { ExternalLink, StickyNote, SkipForward, Undo2, Clock, Zap, Play, CheckCircle, BookCheck, BellRing } from "lucide-react";
 import { getYouTubeVideoId } from "@/lib/utils";
 
 interface Topic {
@@ -106,7 +106,23 @@ export function TopicNode({ topic, onUpdate, onComplete }: TopicNodeProps) {
 
   const canInteract = topic.status !== "locked";
   const canComplete = topic.status === "unlocked" || topic.status === "in_progress";
+  const canBoost = topic.status === "complete" || topic.status === "known";
   const [markingKnown, setMarkingKnown] = useState(false);
+  const [boosting, setBoosting] = useState(false);
+
+  async function handleReviewBoost() {
+    setBoosting(true);
+    try {
+      const res = await fetch(`/api/topics/${topic.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ reviewBoost: true }),
+      });
+      if (res.ok) onComplete?.();
+    } finally {
+      setBoosting(false);
+    }
+  }
 
   return (
     <div className={`relative rounded-lg border-2 p-4 transition-all ${STATUS_STYLES[topic.status]}`}>
@@ -204,6 +220,16 @@ export function TopicNode({ topic, onUpdate, onComplete }: TopicNodeProps) {
                 title="Já sei este tópico (pular estudo, manter revisão)"
               >
                 <BookCheck className="h-4 w-4" />
+              </button>
+            )}
+            {canBoost && (
+              <button
+                onClick={handleReviewBoost}
+                disabled={boosting}
+                className="rounded p-1.5 text-muted-foreground hover:text-amber-600 hover:bg-amber-50 disabled:opacity-50"
+                title="Precisa de atenção — adiantar próxima revisão para amanhã"
+              >
+                <BellRing className="h-4 w-4" />
               </button>
             )}
             {topic.status !== "complete" && topic.status !== "in_progress" && topic.status !== "known" && (

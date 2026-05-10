@@ -12,6 +12,7 @@ const updateTopicSchema = z.object({
   status: z.enum(["skipped", "unlocked", "known"]).optional(),
   resourceUrl: z.string().url().nullable().optional(),
   notes: z.string().nullable().optional(),
+  reviewBoost: z.boolean().optional(),
 });
 
 async function verifyTopicOwnership(topicId: string, userId: string) {
@@ -61,7 +62,7 @@ export async function PATCH(request: Request, { params }: RouteContext) {
   const topic = await verifyTopicOwnership(topicId, session.user.id);
   if (!topic) return NextResponse.json({ error: "Topic not found" }, { status: 404 });
 
-  const { status, resourceUrl, notes } = parsed.data;
+  const { status, resourceUrl, notes, reviewBoost } = parsed.data;
   const now = new Date();
 
   const updateData: Record<string, unknown> = { updatedAt: now };
@@ -76,6 +77,14 @@ export async function PATCH(request: Request, { params }: RouteContext) {
     updateData.fsrsState = "Review";
     updateData.fsrsStability = 4;
     updateData.nextReviewAt = nextReviewAt;
+    updateData.lastReviewedAt = now;
+  }
+
+  // "reviewBoost" = pull next review to tomorrow for complete/known topics
+  if (reviewBoost === true && (topic.status === "complete" || topic.status === "known")) {
+    const boostDate = new Date(now);
+    boostDate.setDate(boostDate.getDate() + 1);
+    updateData.nextReviewAt = boostDate;
     updateData.lastReviewedAt = now;
   }
 

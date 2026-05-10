@@ -33,6 +33,15 @@ export default function GoalsPage() {
     setLoading(false);
   }
 
+  async function handleStatusChange(goalId: string, status: "active" | "paused") {
+    const res = await fetch(`/api/goals/${goalId}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ status }),
+    });
+    if (res.ok) fetchGoals();
+  }
+
   useEffect(() => {
     fetchGoals();
   }, []);
@@ -84,7 +93,7 @@ export default function GoalsPage() {
               </h2>
               <div className="grid gap-4 sm:grid-cols-2">
                 {active.map((goal) => (
-                  <GoalCard key={goal.id} goal={goal} />
+                  <GoalCard key={goal.id} goal={goal} onStatusChange={handleStatusChange} />
                 ))}
               </div>
             </section>
@@ -97,7 +106,7 @@ export default function GoalsPage() {
               </h2>
               <div className="grid gap-4 sm:grid-cols-2">
                 {paused.map((goal) => (
-                  <GoalCard key={goal.id} goal={goal} />
+                  <GoalCard key={goal.id} goal={goal} onStatusChange={handleStatusChange} />
                 ))}
               </div>
             </section>
