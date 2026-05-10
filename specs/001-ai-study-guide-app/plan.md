@@ -1,31 +1,43 @@
 # Implementation Plan: AI-Powered Personal Study Guide
 
-**Branch**: `001-ai-study-guide-app` | **Date**: 2026-05-09 | **Spec**: [spec.md](spec.md)
-**Input**: Feature specification from `specs/001-ai-study-guide-app/spec.md`
+**Branch**: `main` | **Date**: 2026-05-10 | **Spec**: [spec.md](spec.md)
+
+---
 
 ## Summary
 
-A web application that transforms daily ad-hoc study into structured, goal-aligned, compounding knowledge retention. The system has two modes working in tandem: a **passive intelligent planner** that generates daily study plans using spaced repetition (FSRS v5 algorithm) and AI-driven learning path sequencing; and an **interactive AI coaching chat** where the user can ask questions about any topic and receive personalized explanations adapted to their background. Core tech stack: TypeScript + Next.js 14 (App Router), PostgreSQL + Drizzle ORM, Anthropic Claude API (`claude-sonnet-4-6`) via Vercel AI SDK.
+A full-stack web application that acts as an intelligent personal learning companion for a software architect studying AI, cloud computing, and architecture leadership. The system generates personalized daily study plans using spaced repetition (FSRS algorithm), tracks progress across multiple learning goals, and provides an AI coaching chat interface. Built with Next.js 14, PostgreSQL (Neon), and the Anthropic SDK with a mock fallback mode.
+
+**Current status**: MVP + Etapa 3 features fully implemented and deployed to production at https://carreer-study-guide.vercel.app.
+
+---
 
 ## Technical Context
 
-**Language/Version**: TypeScript 5.x
-**Primary Dependencies**: Next.js 14 (App Router), Drizzle ORM, Anthropic SDK (`@anthropic-ai/sdk`), Vercel AI SDK (`ai`, `@ai-sdk/anthropic`), NextAuth.js v5, Tailwind CSS, shadcn/ui, Zod
-**Storage**: PostgreSQL 16 (primary relational store), Redis (daily plan cache + API rate limiting)
-**Testing**: Vitest (unit + integration), Playwright (E2E)
-**Target Platform**: Web browser (desktop-first, mobile-responsive)
-**Project Type**: Full-stack web application — Next.js monolith with App Router API routes as backend
-**Performance Goals**: Daily plan visible in <3s (SC-002), session logging in <30s (SC-003), learning path generated in <60s (SC-001), AI coach first streaming token in <1s
-**Constraints**: Single user v1; no offline mode; no external platform API integrations; AI coaching context window = last 8 messages + current topic + user profile; `ANTHROPIC_API_KEY` required at runtime
-**Scale/Scope**: Single-user SaaS v1; ~10 active goals, ~100 topics per goal, ~365 sessions/year per user; no multi-tenancy in v1
+**Language/Version**: TypeScript 5.x + Node.js 18  
+**Primary Dependencies**: Next.js 14.2, Drizzle ORM 0.30, NextAuth.js 4, Anthropic AI SDK (via `ai` package), ioredis 5, Resend, Zod 3, Tailwind CSS 3, shadcn/ui  
+**Storage**: PostgreSQL via Neon (serverless) + Redis via ioredis (optional, graceful degradation — no Redis = no caching, app still works)  
+**Testing**: Vitest (unit tests for FSRS algorithm)  
+**Target Platform**: Web browser, deployed on Vercel (serverless functions)  
+**Project Type**: Full-stack web application (Next.js App Router, API Routes as serverless functions)  
+**Performance Goals**: Daily plan visible within 3s (SC-002); learning path generated within 60s (SC-001)  
+**Constraints**: Serverless (no long-lived processes); `ioredis` needs `REDIS_URL` env var — graceful null fallback implemented; AI needs `ANTHROPIC_API_KEY` or `MOCK_AI=true`  
+**Scale/Scope**: Single user per account; personal productivity tool; free-tier infrastructure (Neon 500MB, Upstash 10k/day, Vercel free)
+
+---
 
 ## Constitution Check
 
-*GATE: Must pass before Phase 0 research. Re-check after Phase 1 design.*
+*No formal constitution defined for this project. Governance rules below apply.*
 
-The project constitution file is a placeholder template — no specific architectural gates or constraints are currently defined. Proceeding without gate violations.
+**Gates**:
+- ✓ No unnecessary abstractions — direct DB access via Drizzle, no repositories
+- ✓ No feature flags — MOCK_AI is an env-var toggle, not a runtime flag
+- ✓ No backwards-compat shims — schema is fresh, no legacy to support
+- ✓ Security: auth via NextAuth credentials, bcrypt hashing, JWT session, route middleware protection
+- ✓ Redis is optional — graceful null fallback prevents serverless connection issues
 
-**Post-design check**: Architecture is a standard full-stack Next.js monolith. No unusual patterns, no unnecessary abstractions, no premature complexity introduced. No violations to document.
+---
 
 ## Project Structure
 
@@ -33,61 +45,133 @@ The project constitution file is a placeholder template — no specific architec
 
 ```text
 specs/001-ai-study-guide-app/
-├── plan.md                  # This file
-├── research.md              # Phase 0 output
-├── data-model.md            # Phase 1 output
-├── quickstart.md            # Phase 1 output
-├── contracts/               # Phase 1 output
-│   └── api-endpoints.md
-└── tasks.md                 # Phase 2 output (/speckit-tasks — not yet created)
+├── plan.md         ← This file
+├── spec.md         ← Feature specification (with clarifications)
+├── research.md     ← Tech decisions (FSRS, stack, AI, auth, caching)
+├── data-model.md   ← Entity definitions and DB schema
+├── contracts/      ← API endpoint contracts
+├── quickstart.md   ← Integration scenarios and test flows
+└── tasks.md        ← Task breakdown (managed by /speckit-tasks)
 ```
 
-### Source Code (repository root)
+### Source Code
 
 ```text
 src/
-├── app/                              # Next.js App Router
-│   ├── (auth)/
-│   │   ├── login/
-│   │   └── register/
-│   ├── dashboard/                    # Daily plan + overview (P1 — US1)
-│   ├── goals/                        # Goal list + creation (P3 — US5)
-│   │   └── [goalId]/
-│   │       └── path/                 # Learning path view (P2 — US2)
-│   ├── progress/                     # Progress dashboard (P3 — US4)
-│   ├── coach/                        # AI coaching chat (P2 — FR-014)
-│   └── api/                          # REST API handlers
-│       ├── auth/
-│       ├── goals/
-│       │   └── [goalId]/
-│       │       └── path/
-│       ├── topics/
-│       │   └── [topicId]/
-│       ├── sessions/
-│       ├── plans/
-│       │   └── today/
-│       ├── progress/
-│       └── coach/
+├── app/
+│   ├── (auth)/                  # login, register pages
+│   ├── dashboard/               # daily plan view
+│   ├── goals/                   # goal list + path timeline
+│   ├── progress/                # heatmap, streaks, per-goal stats
+│   ├── coach/                   # AI chat interface
+│   └── api/
+│       ├── auth/                # NextAuth + register endpoint
+│       ├── goals/               # CRUD goals, path generation, path regen
+│       ├── plans/today/         # daily plan GET, task PATCH, time regen
+│       ├── progress/            # stats aggregation
+│       ├── sessions/            # study session log
+│       ├── topics/              # topic PATCH (resourceUrl, notes, status)
+│       ├── coach/               # AI chat POST
+│       └── email/daily-digest/  # Vercel cron endpoint
 ├── components/
-│   ├── dashboard/                    # DailyPlanCard, TaskItem, StreakBadge
-│   ├── goals/                        # GoalCard, PathTimeline, TopicNode
-│   ├── coach/                        # ChatWindow, MessageBubble, InputBar
-│   └── ui/                           # shadcn/ui base components
-├── lib/
-│   ├── ai/                           # Claude API wrapper, system prompts, structured generation
-│   ├── spaced-repetition/            # FSRS v5 algorithm (pure TypeScript, no deps)
-│   ├── planner/                      # Daily plan generation logic
-│   └── db/                           # Drizzle schema, client, migrations
-└── types/                            # Shared TypeScript domain types
-
-tests/
-├── unit/                             # FSRS algorithm, planner logic, AI prompt builders
-├── integration/                      # API route tests with real DB
-└── e2e/                              # Playwright: full user flows
+│   ├── dashboard/               # DailyPlanCard, TaskItem, StreakBadge
+│   ├── goals/                   # GoalCard, GoalCreateForm, TopicNode, PathTimeline
+│   ├── progress/                # GoalProgressCard, StudyHeatmap, StreaksSection
+│   ├── coach/                   # ChatWindow, MessageBubble, InputBar
+│   └── layout/                  # AppShell, NavBar
+└── lib/
+    ├── ai/                      # Anthropic client, generate.ts (mock + real), prompts
+    ├── auth.ts                  # NextAuth config
+    ├── db/                      # Drizzle client + schema.ts
+    ├── email/templates.ts       # Resend HTML email template
+    ├── hooks/                   # useCoachChat
+    ├── planner/                 # generateDailyPlan, risk.ts (atRisk calc)
+    ├── redis.ts                 # Optional ioredis client (null if no REDIS_URL)
+    ├── spaced-repetition/       # FSRS algorithm (fsrs.ts, types.ts)
+    ├── utils.ts                 # cn(), getYouTubeVideoId()
+    └── validations/             # Zod schemas for all endpoints
 ```
 
-**Structure Decision**: Full-stack Next.js monolith (App Router). Frontend pages and backend API routes co-located in the same project. `lib/` holds all business logic independently testable from API routes. Optimal for single-developer v1 with no requirement for separate deployment units.
+---
 
-## Complexity Tracking
+## Implemented Features (Etapas 1–3)
 
-> No constitution violations. Section intentionally blank.
+### Etapa 1 — Core MVP
+- User registration and login (NextAuth credentials + bcrypt)
+- Learning goal creation with AI-generated learning path (FSRS topics)
+- Daily plan generation (FSRS-based, respects daily time budget)
+- Task completion with confidence rating (1–5) → FSRS card update
+- Topic unlock progression (first topic unlocked, rest locked in order)
+- Dashboard with plan and streak counter
+- Goals page with progress per goal and atRisk detection
+- Path timeline page with topic nodes (resource URL, notes, YouTube embed)
+- Progress page with heatmap, streaks, per-goal progress cards
+- AI coach chat (mock mode: returns canned responses; real mode: Anthropic claude-3-haiku)
+
+### Etapa 2 — Bug Fixes & Stability
+- Fixed Anthropic zero-credits crash → MOCK_AI=true mode
+- Fixed Next.js 14/15 params.use() pattern
+- Fixed Redis stale cache on plan invalidation
+- Fixed progress page crash on empty data
+
+### Etapa 3 — UX Improvements
+- **Flexible daily time**: inline edit in DailyPlanCard → POST /api/plans/today/regenerate
+- **YouTube embed**: getYouTubeVideoId() utility + TopicNode thumbnail/player toggle
+- **At-risk UX**: GoalCard + GoalProgressCard show days late, estimated completion date, contextual suggestion
+- **Email digest**: Resend integration + Vercel cron (daily at 10h UTC) + HTML template
+
+---
+
+## Next Features (Etapa 4+)
+
+These features emerge from the `/speckit-clarify` session (2026-05-10) and spec clarifications:
+
+### FR-015 — Onboarding Wizard
+New users see a 2–3 step wizard before the dashboard: goal creation → priority/date → daily time.  
+**Files to create/modify**: `src/app/onboarding/page.tsx`, `src/middleware.ts` (redirect if no goals), `src/app/api/auth/register/route.ts` (set onboarding flag).
+
+### FR-016 — AI Graceful Degradation  
+When AI is unavailable, fall back to rule-based plan (overdue reviews + next unlocked topics). Currently `MOCK_AI=true` serves this purpose in development. For production: wrap all `generateObject()` calls in try/catch with rule-based fallback + banner state in API response.  
+**Files to modify**: `src/lib/ai/generate.ts`, `src/app/api/goals/route.ts`, `src/app/api/plans/today/route.ts`.
+
+### FR-017 — Data Export + Account Deletion
+Export all user data as JSON + permanent account deletion from account settings.  
+**Files to create**: `src/app/api/account/export/route.ts`, `src/app/api/account/delete/route.ts`, `src/app/settings/page.tsx`.
+
+### Cross-goal Topic Sharing (Clarification Q3)
+Topics with identical titles across goals should share a single entity and unified progress/review schedule. Currently each path has independent topics. Requires data model change + migration.  
+**Complexity**: Medium (schema migration + deduplication logic).
+
+### Missed-day Recovery Choice (Clarification Q4)
+When ≥2 consecutive missed days detected, show modal: "Recover missed content" vs "Resume normal". Store choice, distribute or discard backlog accordingly.  
+**Files to modify**: `src/app/api/plans/today/route.ts` (detect gap), `src/components/dashboard/DailyPlanCard.tsx` (modal).
+
+---
+
+## Environment Variables
+
+| Variable | Required | Description |
+|----------|----------|-------------|
+| `DATABASE_URL` | ✓ | Neon PostgreSQL connection string |
+| `NEXTAUTH_SECRET` | ✓ | JWT signing secret |
+| `NEXTAUTH_URL` | ✓ | App base URL (for callbacks) |
+| `NEXT_PUBLIC_APP_URL` | ✓ | Public URL for email links |
+| `CRON_SECRET` | ✓ | Bearer token for Vercel cron calls |
+| `ANTHROPIC_API_KEY` | Production | Required when MOCK_AI is not true |
+| `MOCK_AI` | Dev/staging | Set to "true" to bypass Anthropic API |
+| `REDIS_URL` | Optional | Redis connection; no caching if omitted |
+| `RESEND_API_KEY` | Optional | Email digest; silent-fail if omitted |
+| `RESEND_FROM_EMAIL` | Optional | Sender address for digest emails |
+
+---
+
+## Key Architectural Decisions
+
+See [research.md](research.md) for full rationale. Summary:
+
+1. **FSRS v5** (simplified) over SM-2 — better retrievability modeling for daily planner
+2. **Next.js 14 App Router** — unified SSR + API routes, single deployment
+3. **Drizzle ORM** — type-safe SQL, thin layer, easy migrations via `drizzle-kit push`
+4. **NextAuth credentials** — simple email/password for v1, no OAuth dependency
+5. **Redis optional** — graceful null fallback; `ioredis` can't use persistent connections on Vercel serverless with Upstash (needs HTTP client swap for production Redis)
+6. **MOCK_AI flag** — environment-level toggle, not feature-flagged code paths

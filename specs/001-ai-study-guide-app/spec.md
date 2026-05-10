@@ -89,7 +89,7 @@ As a professional with clear career objectives in AI and architecture leadership
 
 ### Edge Cases
 
-- What happens when the user hasn't studied for several days — does the system attempt to catch up on missed content or reset expectations forward?
+- When the user hasn't studied for several days: the system detects the gap (≥2 consecutive missed days) and presents a choice — "Recover missed content (distributed over the next N days)" or "Resume with normal daily load from today"; the user's choice is applied immediately to the next generated plan
 - How does the system handle a topic that spans multiple domains (e.g., "LLM Fine-tuning" is both AI and cloud computing)?
 - What happens when the user marks a topic as already known — can they skip it in the learning path without it affecting their review schedule?
 - How does the system handle conflicting goals that compete for the same limited daily study time?
@@ -114,12 +114,15 @@ As a professional with clear career objectives in AI and architecture leadership
 - **FR-012**: System MUST track daily study streaks and display them prominently to reinforce consistent habits
 - **FR-013**: System MUST allow users to pause, resume, or archive a learning goal without losing progress data
 - **FR-014**: System MUST operate as both a passive intelligent planner AND include an interactive AI coaching interface; the planner generates daily plans, learning paths, and spaced review schedules automatically, while the coaching panel allows the user to ask questions, describe their understanding of a topic, and receive personalized guidance and explanations in a conversational format; both modes must be available in v1, with the planner as the primary entry point
+- **FR-015**: System MUST present a guided onboarding wizard
+- **FR-016**: System MUST implement graceful degradation when the AI service is unavailable
+- **FR-017**: System MUST provide a data portability and account deletion feature: users can export all their data (goals, learning paths, topics, study sessions, daily plans) as a single JSON file; users can permanently delete their account and all associated data; both actions must be accessible from account settings: if today's plan cannot be generated via AI, the system MUST automatically fall back to either (a) the previous day's pending tasks or (b) a rule-based plan selecting overdue reviews and the next unlocked topics in each active path; the user MUST NOT see a blocking error — a subtle banner indicating "AI unavailable, using smart fallback" is acceptable (2–3 steps) to first-time users before showing the dashboard: Step 1 — name and describe the first learning goal; Step 2 — set priority and optional target date; Step 3 — set daily available study time; only after completing these steps does the user land on the main dashboard with their generated plan
 
 ### Key Entities
 
 - **Learning Goal**: A defined knowledge outcome the user wants to achieve, with title, priority, target date, and status
 - **Learning Path**: An ordered sequence of topics with explicit dependencies, generated per goal, showing progression from foundational to advanced
-- **Topic**: A discrete unit of knowledge within a path; has estimated study time, complexity level, completion status, confidence rating, and an attached review schedule
+- **Topic**: A discrete unit of knowledge within a path; has estimated study time, complexity level, completion status, confidence rating, and an attached review schedule; a single Topic entity may be referenced by multiple Learning Paths across different goals — progress, confidence ratings, and review schedules are shared (not duplicated) across all goals that include the same topic
 - **Study Session**: A logged instance of learning activity; captures topic, date, actual duration, and confidence rating (1–5)
 - **Daily Plan**: The system-generated set of study tasks for a specific day, dynamically balancing new learning and spaced reviews within the user's time budget
 - **Review Schedule**: The per-topic calendar of upcoming review sessions, calculated from spaced repetition intervals adjusted by confidence ratings
@@ -135,6 +138,16 @@ As a professional with clear career objectives in AI and architecture leadership
 - **SC-005**: 75% of users who use the app for at least 2 weeks report feeling more organized and in control of their study progress compared to before using the tool (measured via in-app survey)
 - **SC-006**: Topics reviewed on schedule via spaced repetition show ≥20% higher average confidence scores compared to topics reviewed ad-hoc or not reviewed
 - **SC-007**: Users report a ≥40% reduction in time spent deciding what to study each day, compared to self-reported baseline before using the tool
+
+## Clarifications
+
+### Session 2026-05-10
+
+- Q: What does a new user see on first login with no goals? → A: Guided onboarding wizard (2–3 steps: goal creation → priority/date → daily time) before reaching the dashboard
+- Q: When AI service is unavailable, what should the system do? → A: Fallback automático — reutiliza plano anterior ou gera plano por regras simples; exibe banner sutil, nunca bloqueia o usuário
+- Q: When the same topic appears in multiple goals, how is it handled? → A: Shared entity — single Topic, progress and review schedule unified across all goals referencing it
+- Q: After multiple missed study days, how should the system react? → A: Presents a choice to the user — recover missed content (distributed) or resume with normal load from today
+- Q: Can users export or delete their learning data? → A: Yes — full JSON export + permanent account deletion, accessible from account settings
 
 ## Assumptions
 
