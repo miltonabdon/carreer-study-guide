@@ -65,7 +65,7 @@ export async function generateDailyPlan(
 
     if (!path) continue;
 
-    // Due reviews: complete topics past next_review_at
+    // Due reviews: complete or "known" topics past next_review_at
     const overdueTopics = await db
       .select({
         id: topics.id,
@@ -77,7 +77,7 @@ export async function generateDailyPlan(
       .where(
         and(
           eq(topics.pathId, path.id),
-          eq(topics.status, "complete"),
+          sql`${topics.status} IN ('complete', 'known')`,
           sql`${topics.nextReviewAt} <= ${now.toISOString()}::timestamptz`
         )
       );
@@ -183,7 +183,8 @@ export async function generateDailyPlan(
     .returning();
 
   if (generated.tasks.length > 0) {
-    const taskRows = generated.tasks.map((t, i) => ({
+    const capped = generated.tasks.slice(0, 5);
+    const taskRows = capped.map((t, i) => ({
       planId: plan.id,
       topicId: t.topicId,
       taskType: t.taskType,

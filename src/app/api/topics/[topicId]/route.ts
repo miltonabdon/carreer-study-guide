@@ -2,13 +2,14 @@ import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { topics, learningPaths, learningGoals } from "@/lib/db/schema";
-import { eq } from "drizzle-orm";
+import { eq, asc } from "drizzle-orm";
 import { z } from "zod";
+import { getRedisClient } from "@/lib/redis";
 
 type RouteContext = { params: Promise<{ topicId: string }> };
 
 const updateTopicSchema = z.object({
-  status: z.enum(["skipped", "unlocked"]).optional(),
+  status: z.enum(["skipped", "unlocked", "known"]).optional(),
   resourceUrl: z.string().url().nullable().optional(),
   notes: z.string().nullable().optional(),
 });
@@ -61,17 +62,52 @@ export async function PATCH(request: Request, { params }: RouteContext) {
   if (!topic) return NextResponse.json({ error: "Topic not found" }, { status: 404 });
 
   const { status, resourceUrl, notes } = parsed.data;
+  const now = new Date();
 
-  const updateData: Record<string, unknown> = { updatedAt: new Date() };
+  const updateData: Record<string, unknown> = { updatedAt: now };
   if (status !== undefined) updateData.status = status;
   if (resourceUrl !== undefined) updateData.resourceUrl = resourceUrl;
   if (notes !== undefined) updateData.notes = notes;
+
+  // "known" = already mastered; schedule a review in 7 days and unlock next topic
+  if (status === "known") {
+    const nextReviewAt = new Date(now);
+    nextReviewAt.setDate(nextReviewAt.getDate() + 7);
+    updateData.fsrsState = "Review";
+    updateData.fsrsStability = 4;
+    updateData.nextReviewAt = nextReviewAt;
+    updateData.lastReviewedAt = now;
+  }
 
   const [updated] = await db
     .update(topics)
     .set(updateData)
     .where(eq(topics.id, topicId))
     .returning();
+
+  if (!updated) return NextResponse.json({ error: "Topic not found" }, { status: 404 });
+
+  // Unlock next topic when marking as "known"
+  if (status === "known") {
+    const pathTopics = await db
+      .select({ id: topics.id, status: topics.status })
+      .from(topics)
+      .where(eq(topics.pathId, topic.pathId))
+      .orderBy(asc(topics.orderIndex));
+
+    const currentIdx = pathTopics.findIndex((t) => t.id === topicId);
+    if (currentIdx >= 0 && currentIdx + 1 < pathTopics.length) {
+      const next = pathTopics[currentIdx + 1];
+      if (next.status === "locked") {
+        await db.update(topics).set({ status: "unlocked", updatedAt: now }).where(eq(topics.id, next.id));
+      }
+    }
+  }
+
+  // Invalidate Redis daily plan cache
+  const today = new Date().toLocaleDateString("en-CA");
+  const redis = getRedisClient();
+  if (redis) await redis.del(`daily_plan:${session.user.id}:${today}`).catch(() => null);
 
   return NextResponse.json(updated);
 }

@@ -13,7 +13,7 @@ interface Topic {
   orderIndex: number;
   complexity: number;
   estimatedMinutes: number;
-  status: "locked" | "unlocked" | "in_progress" | "complete" | "skipped";
+  status: "locked" | "unlocked" | "in_progress" | "complete" | "skipped" | "known";
   resourceUrl: string | null;
   notes: string | null;
   nextReviewAt: string | null;

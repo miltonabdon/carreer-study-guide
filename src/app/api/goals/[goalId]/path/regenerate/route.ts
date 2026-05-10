@@ -4,6 +4,7 @@ import { db } from "@/lib/db";
 import { learningGoals, learningPaths, topics, users } from "@/lib/db/schema";
 import { eq, and } from "drizzle-orm";
 import { generateLearningPath } from "@/lib/ai/generate";
+import { getRedisClient } from "@/lib/redis";
 
 type RouteContext = { params: Promise<{ goalId: string }> };
 
@@ -91,6 +92,10 @@ export async function POST(_request: Request, { params }: RouteContext) {
   }));
 
   await db.insert(topics).values(topicRows);
+
+  const today = new Date().toLocaleDateString("en-CA");
+  const redis = getRedisClient();
+  if (redis) await redis.del(`daily_plan:${session.user.id}:${today}`).catch(() => null);
 
   return NextResponse.json(
     { path: { ...newPath, paceWarning: generated.paceWarning, fallbackUsed: generated.fallbackUsed } },

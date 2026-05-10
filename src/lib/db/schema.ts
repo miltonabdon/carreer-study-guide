@@ -22,6 +22,7 @@ export const topicStatusEnum = pgEnum("topic_status", [
   "in_progress",
   "complete",
   "skipped",
+  "known",
 ]);
 export const fsrsStateEnum = pgEnum("fsrs_state", ["New", "Learning", "Review", "Relearning"]);
 export const sessionTypeEnum = pgEnum("session_type", ["new_learning", "review"]);

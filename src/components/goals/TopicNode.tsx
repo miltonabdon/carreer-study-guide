@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { ExternalLink, StickyNote, SkipForward, Undo2, Clock, Zap, Play, CheckCircle } from "lucide-react";
+import { ExternalLink, StickyNote, SkipForward, Undo2, Clock, Zap, Play, CheckCircle, BookCheck } from "lucide-react";
 import { getYouTubeVideoId } from "@/lib/utils";
 
 interface Topic {
@@ -11,7 +11,7 @@ interface Topic {
   orderIndex: number;
   complexity: number;
   estimatedMinutes: number;
-  status: "locked" | "unlocked" | "in_progress" | "complete" | "skipped";
+  status: "locked" | "unlocked" | "in_progress" | "complete" | "skipped" | "known";
   resourceUrl: string | null;
   notes: string | null;
   nextReviewAt: string | null;
@@ -29,6 +29,7 @@ const STATUS_STYLES: Record<Topic["status"], string> = {
   in_progress: "border-primary bg-primary/5",
   complete: "border-green-500 bg-green-50 dark:bg-green-950/20",
   skipped: "border-muted-foreground/20 bg-muted/30 text-muted-foreground",
+  known: "border-blue-400 bg-blue-50 dark:bg-blue-950/20",
 };
 
 export function TopicNode({ topic, onUpdate, onComplete }: TopicNodeProps) {
@@ -63,6 +64,20 @@ export function TopicNode({ topic, onUpdate, onComplete }: TopicNodeProps) {
     await onUpdate(topic.id, { status: newStatus });
   }
 
+  async function handleMarkKnown() {
+    setMarkingKnown(true);
+    try {
+      const res = await fetch(`/api/topics/${topic.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status: "known" }),
+      });
+      if (res.ok) onComplete?.();
+    } finally {
+      setMarkingKnown(false);
+    }
+  }
+
   async function handleComplete() {
     setCompleting(true);
     setCompleteError(null);
@@ -91,6 +106,7 @@ export function TopicNode({ topic, onUpdate, onComplete }: TopicNodeProps) {
 
   const canInteract = topic.status !== "locked";
   const canComplete = topic.status === "unlocked" || topic.status === "in_progress";
+  const [markingKnown, setMarkingKnown] = useState(false);
 
   return (
     <div className={`relative rounded-lg border-2 p-4 transition-all ${STATUS_STYLES[topic.status]}`}>
@@ -164,7 +180,17 @@ export function TopicNode({ topic, onUpdate, onComplete }: TopicNodeProps) {
                 <CheckCircle className="h-4 w-4" />
               </button>
             )}
-            {topic.status !== "complete" && topic.status !== "in_progress" && (
+            {canComplete && (
+              <button
+                onClick={handleMarkKnown}
+                disabled={markingKnown}
+                className="rounded p-1.5 text-muted-foreground hover:text-blue-600 hover:bg-blue-50 disabled:opacity-50"
+                title="Já sei este tópico (pular estudo, manter revisão)"
+              >
+                <BookCheck className="h-4 w-4" />
+              </button>
+            )}
+            {topic.status !== "complete" && topic.status !== "in_progress" && topic.status !== "known" && (
               <button
                 onClick={toggleSkip}
                 className="rounded p-1.5 text-muted-foreground hover:text-foreground hover:bg-muted"

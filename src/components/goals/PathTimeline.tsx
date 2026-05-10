@@ -9,7 +9,7 @@ interface Topic {
   orderIndex: number;
   complexity: number;
   estimatedMinutes: number;
-  status: "locked" | "unlocked" | "in_progress" | "complete" | "skipped";
+  status: "locked" | "unlocked" | "in_progress" | "complete" | "skipped" | "known";
   resourceUrl: string | null;
   notes: string | null;
   nextReviewAt: string | null;
@@ -37,13 +37,15 @@ export function PathTimeline({ topics, onTopicUpdate, onTopicComplete }: PathTim
               className={`absolute -left-[2.35rem] top-4 h-3 w-3 rounded-full border-2 border-background ring-2 z-10 ${
                 topic.status === "complete"
                   ? "bg-green-500 ring-green-500"
-                  : topic.status === "in_progress"
-                    ? "bg-primary ring-primary"
-                    : topic.status === "unlocked"
-                      ? "bg-primary/50 ring-primary/50"
-                      : topic.status === "skipped"
-                        ? "bg-muted-foreground ring-muted-foreground"
-                        : "bg-muted ring-muted-foreground/30"
+                  : topic.status === "known"
+                    ? "bg-blue-400 ring-blue-400"
+                    : topic.status === "in_progress"
+                      ? "bg-primary ring-primary"
+                      : topic.status === "unlocked"
+                        ? "bg-primary/50 ring-primary/50"
+                        : topic.status === "skipped"
+                          ? "bg-muted-foreground ring-muted-foreground"
+                          : "bg-muted ring-muted-foreground/30"
               }`}
             />
             <TopicNode topic={topic} onUpdate={onTopicUpdate} onComplete={onTopicComplete} />
