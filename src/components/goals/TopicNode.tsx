@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { ExternalLink, StickyNote, SkipForward, Undo2, Clock, Zap, Play } from "lucide-react";
+import { ExternalLink, StickyNote, SkipForward, Undo2, Clock, Zap, Play, CheckCircle } from "lucide-react";
 import { getYouTubeVideoId } from "@/lib/utils";
 
 interface Topic {
@@ -36,6 +36,10 @@ export function TopicNode({ topic, onUpdate }: TopicNodeProps) {
   const [resourceUrl, setResourceUrl] = useState(topic.resourceUrl ?? "");
   const [saving, setSaving] = useState(false);
   const [showEmbed, setShowEmbed] = useState(false);
+  const [showComplete, setShowComplete] = useState(false);
+  const [completeDuration, setCompleteDuration] = useState(topic.estimatedMinutes);
+  const [completeConfidence, setCompleteConfidence] = useState(3);
+  const [completing, setCompleting] = useState(false);
 
   const ytVideoId = topic.resourceUrl ? getYouTubeVideoId(topic.resourceUrl) : null;
 
@@ -57,7 +61,28 @@ export function TopicNode({ topic, onUpdate }: TopicNodeProps) {
     await onUpdate(topic.id, { status: newStatus });
   }
 
+  async function handleComplete() {
+    setCompleting(true);
+    try {
+      const res = await fetch(`/api/topics/${topic.id}/complete`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          durationMinutes: completeDuration,
+          confidenceRating: completeConfidence,
+        }),
+      });
+      if (res.ok) {
+        await onUpdate(topic.id, { status: "complete" });
+        setShowComplete(false);
+      }
+    } finally {
+      setCompleting(false);
+    }
+  }
+
   const canInteract = topic.status !== "locked";
+  const canComplete = topic.status === "unlocked" || topic.status === "in_progress";
 
   return (
     <div className={`relative rounded-lg border-2 p-4 transition-all ${STATUS_STYLES[topic.status]}`}>
@@ -122,6 +147,15 @@ export function TopicNode({ topic, onUpdate }: TopicNodeProps) {
             >
               <StickyNote className="h-4 w-4" />
             </button>
+            {canComplete && (
+              <button
+                onClick={() => setShowComplete(!showComplete)}
+                className={`rounded p-1.5 ${showComplete ? "text-green-600 bg-green-50" : "text-muted-foreground hover:text-green-600 hover:bg-green-50"}`}
+                title="Concluir tópico"
+              >
+                <CheckCircle className="h-4 w-4" />
+              </button>
+            )}
             {topic.status !== "complete" && topic.status !== "in_progress" && (
               <button
                 onClick={toggleSkip}
@@ -208,6 +242,58 @@ export function TopicNode({ topic, onUpdate }: TopicNodeProps) {
               className="text-xs px-3 py-1 rounded bg-primary text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
             >
               {saving ? "Saving…" : "Save"}
+            </button>
+          </div>
+        </div>
+      )}
+
+      {showComplete && (
+        <div className="mt-3 space-y-3 border-t border-green-200 pt-3 bg-green-50/50 rounded-b-lg -mx-4 -mb-4 px-4 pb-4">
+          <p className="text-xs font-medium text-green-800">Registrar conclusão</p>
+          <div className="flex gap-4">
+            <div className="flex-1">
+              <label className="text-xs text-muted-foreground block mb-1">Tempo estudado (min)</label>
+              <input
+                type="number"
+                min={1}
+                max={480}
+                value={completeDuration}
+                onChange={(e) => setCompleteDuration(Number(e.target.value))}
+                className="w-full rounded border px-2 py-1 text-xs focus:outline-none focus:ring-1 focus:ring-green-500"
+              />
+            </div>
+            <div className="flex-1">
+              <label className="text-xs text-muted-foreground block mb-1">Confiança (1–5)</label>
+              <div className="flex gap-1 mt-1">
+                {[1, 2, 3, 4, 5].map((n) => (
+                  <button
+                    key={n}
+                    onClick={() => setCompleteConfidence(n)}
+                    className={`w-7 h-7 rounded text-xs font-bold transition-colors ${
+                      completeConfidence === n
+                        ? "bg-green-600 text-white"
+                        : "bg-white border border-gray-300 text-gray-600 hover:border-green-400"
+                    }`}
+                  >
+                    {n}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+          <div className="flex gap-2 justify-end">
+            <button
+              onClick={() => setShowComplete(false)}
+              className="text-xs px-3 py-1 rounded border hover:bg-muted"
+            >
+              Cancelar
+            </button>
+            <button
+              onClick={handleComplete}
+              disabled={completing}
+              className="text-xs px-3 py-1.5 rounded bg-green-600 text-white hover:bg-green-700 disabled:opacity-50 font-medium"
+            >
+              {completing ? "Salvando…" : "Concluir tópico"}
             </button>
           </div>
         </div>
