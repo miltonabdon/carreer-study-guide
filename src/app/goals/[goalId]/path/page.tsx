@@ -3,7 +3,7 @@
 import { useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { ArrowLeft, RefreshCw, Clock, BookOpen } from "lucide-react";
+import { ArrowLeft, RefreshCw, Clock, BookOpen, Trophy } from "lucide-react";
 import { PathTimeline } from "@/components/goals/PathTimeline";
 
 interface Topic {
@@ -117,6 +117,17 @@ export default function PathPage({ params }: { params: { goalId: string } }) {
   }
 
   const totalHours = Math.round(data.path.totalEstimatedMinutes / 60);
+  const topicsLeft = data.path.totalTopics - data.path.completedTopics;
+  const pct = data.path.completionPercent;
+
+  function motivationalPhrase(): string {
+    if (pct === 0) return "Pronto para começar sua jornada!";
+    if (pct < 25) return "Ótimo começo — mantenha o ritmo 💪";
+    if (pct < 50) return "Construindo bases sólidas. Continue assim!";
+    if (pct < 75) return "Metade do caminho! Progresso excelente 🔥";
+    if (pct < 100) return "Quase lá! Reta final 🚀";
+    return "Trilha completa! Trabalho incrível 🏆";
+  }
 
   return (
     <div className="max-w-3xl mx-auto p-6">
@@ -157,17 +168,48 @@ export default function PathPage({ params }: { params: { goalId: string } }) {
           </span>
         </div>
 
-        <div className="mt-3">
-          <div className="flex justify-between text-xs text-muted-foreground mb-1">
-            <span>Progress</span>
-            <span>{data.path.completionPercent}%</span>
+        <div className="mt-4">
+          {/* Frase motivacional e percentual */}
+          <div className="flex justify-between items-end mb-1.5">
+            <span className="text-xs font-medium text-muted-foreground">{motivationalPhrase()}</span>
+            <span className="text-xs font-bold tabular-nums">{pct}%</span>
           </div>
-          <div className="h-2 w-full rounded-full bg-muted overflow-hidden">
-            <div
-              className="h-full rounded-full bg-primary transition-all"
-              style={{ width: `${data.path.completionPercent}%` }}
-            />
+
+          {/* Barra com marcos */}
+          <div className="relative">
+            <div className="h-3 w-full rounded-full bg-muted overflow-hidden">
+              <div
+                className="h-full rounded-full transition-all duration-700"
+                style={{
+                  width: `${pct}%`,
+                  background:
+                    pct === 100
+                      ? "#22c55e"
+                      : `linear-gradient(to right, hsl(var(--primary)), hsl(var(--primary) / 0.6))`,
+                }}
+              />
+            </div>
+            {/* Marcos em 25%, 50%, 75% */}
+            {[25, 50, 75].map((mark) => (
+              <div
+                key={mark}
+                className={`absolute top-0 h-3 w-px ${pct >= mark ? "bg-white/50" : "bg-muted-foreground/20"}`}
+                style={{ left: `${mark}%` }}
+              />
+            ))}
           </div>
+
+          {/* Contagem restante ou celebração */}
+          {pct === 100 ? (
+            <div className="flex items-center gap-1.5 mt-2 text-green-700">
+              <Trophy className="h-3.5 w-3.5" />
+              <span className="text-xs font-semibold">Trilha concluída!</span>
+            </div>
+          ) : topicsLeft > 0 ? (
+            <p className="text-xs text-muted-foreground mt-1.5">
+              {topicsLeft} tópico{topicsLeft !== 1 ? "s" : ""} restante{topicsLeft !== 1 ? "s" : ""}
+            </p>
+          ) : null}
         </div>
       </div>
 

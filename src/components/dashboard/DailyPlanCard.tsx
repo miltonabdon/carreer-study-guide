@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect } from "react";
 import { TaskItem } from "./TaskItem";
-import { Brain, Pencil, Check, X, AlertTriangle } from "lucide-react";
+import { Brain, Pencil, Check, X, AlertTriangle, Trophy } from "lucide-react";
 
 interface PlanTask {
   id: string;
@@ -39,8 +39,9 @@ export function DailyPlanCard({ plan, onTaskComplete, onRegenerate }: DailyPlanC
 
   const completed = plan.tasks.filter((t) => t.status === "completed").length;
   const total = plan.tasks.length;
+  const allDone = total > 0 && plan.completionPercent === 100;
 
-  const date = new Date(plan.planDate + "T12:00:00").toLocaleDateString("en-US", {
+  const date = new Date(plan.planDate + "T12:00:00").toLocaleDateString("pt-BR", {
     weekday: "long",
     month: "long",
     day: "numeric",
@@ -78,13 +79,12 @@ export function DailyPlanCard({ plan, onTaskComplete, onRegenerate }: DailyPlanC
       <div className="px-5 py-4 border-b bg-muted/30">
         <div className="flex items-center justify-between">
           <div>
-            <h2 className="font-semibold">Today&apos;s Plan</h2>
-            <p className="text-xs text-muted-foreground mt-0.5">{date}</p>
+            <h2 className="font-semibold">Plano do Dia</h2>
+            <p className="text-xs text-muted-foreground mt-0.5 capitalize">{date}</p>
           </div>
           <div className="text-right">
-            <p className="text-sm font-medium">{completed}/{total} tasks</p>
+            <p className="text-sm font-medium">{completed}/{total} tarefas</p>
 
-            {/* Editable minutes */}
             {editingMinutes ? (
               <div className="flex items-center gap-1 mt-0.5 justify-end">
                 <input
@@ -110,9 +110,9 @@ export function DailyPlanCard({ plan, onTaskComplete, onRegenerate }: DailyPlanC
                 onClick={() => { setMinutesInput(String(plan.availableMinutes)); setEditingMinutes(true); }}
                 disabled={regenerating}
                 className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground mt-0.5 ml-auto disabled:opacity-50"
-                title="Adjust today's available time"
+                title="Ajustar tempo disponível"
               >
-                {regenerating ? "Updating…" : `${plan.availableMinutes} min available`}
+                {regenerating ? "Atualizando…" : `${plan.availableMinutes} min disponíveis`}
                 {!regenerating && onRegenerate && <Pencil className="h-3 w-3" />}
               </button>
             )}
@@ -121,22 +121,42 @@ export function DailyPlanCard({ plan, onTaskComplete, onRegenerate }: DailyPlanC
 
         {total > 0 && (
           <div className="mt-3">
-            <div className="h-2 w-full rounded-full bg-muted overflow-hidden">
+            {/* Progress bar */}
+            <div className="h-2.5 w-full rounded-full bg-muted overflow-hidden">
               <div
-                className="h-full rounded-full bg-primary transition-all duration-500"
-                style={{ width: `${plan.completionPercent}%` }}
+                className="h-full rounded-full transition-all duration-700"
+                style={{
+                  width: `${plan.completionPercent}%`,
+                  background: allDone
+                    ? "#22c55e"
+                    : `linear-gradient(to right, hsl(var(--primary)), hsl(var(--primary) / 0.6))`,
+                }}
               />
             </div>
+            <p className="text-xs text-muted-foreground text-right mt-1">
+              {plan.completionPercent}%
+            </p>
           </div>
         )}
       </div>
+
+      {/* All-done celebration */}
+      {allDone && (
+        <div className="px-5 py-5 bg-green-50 border-b border-green-100 text-center">
+          <Trophy className="h-8 w-8 text-green-500 mx-auto mb-2" />
+          <p className="font-semibold text-green-800 text-sm">Plano do dia completo! 🎉</p>
+          <p className="text-xs text-green-600 mt-1">
+            Ótimo trabalho — volte amanhã para manter a sequência
+          </p>
+        </div>
+      )}
 
       {/* Tasks */}
       <div className="p-4 space-y-3">
         {plan.tasks.length === 0 ? (
           <div className="py-8 text-center text-muted-foreground">
-            <p className="text-sm">No tasks for today.</p>
-            <p className="text-xs mt-1">Create a learning goal to get started.</p>
+            <p className="text-sm">Nenhuma tarefa por hoje.</p>
+            <p className="text-xs mt-1">Crie uma meta de aprendizado para começar.</p>
           </div>
         ) : (
           plan.tasks.map((task) => (

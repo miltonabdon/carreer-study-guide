@@ -26,7 +26,7 @@ interface TopicNodeProps {
 const STATUS_STYLES: Record<Topic["status"], string> = {
   locked: "border-muted-foreground/30 bg-muted/50 text-muted-foreground",
   unlocked: "border-primary/50 bg-background",
-  in_progress: "border-primary bg-primary/5",
+  in_progress: "border-primary bg-primary/5 ring-2 ring-primary/20 shadow-sm shadow-primary/10",
   complete: "border-green-500 bg-green-50 dark:bg-green-950/20",
   skipped: "border-muted-foreground/20 bg-muted/30 text-muted-foreground",
   known: "border-blue-400 bg-blue-50 dark:bg-blue-950/20",
@@ -119,9 +119,25 @@ export function TopicNode({ topic, onUpdate, onComplete }: TopicNodeProps) {
             <h3 className={`font-medium text-sm ${topic.status === "locked" ? "text-muted-foreground" : ""}`}>
               {topic.title}
             </h3>
+            {topic.status === "in_progress" && (
+              <span className="inline-flex items-center gap-1 rounded-full bg-primary/10 text-primary px-2 py-0.5 text-xs font-medium">
+                <span className="h-1.5 w-1.5 rounded-full bg-primary animate-pulse" />
+                Em andamento
+              </span>
+            )}
+            {topic.status === "complete" && (
+              <span className="rounded-full bg-green-100 text-green-700 px-2 py-0.5 text-xs font-medium">
+                Concluído
+              </span>
+            )}
+            {topic.status === "known" && (
+              <span className="rounded-full bg-blue-100 text-blue-700 px-2 py-0.5 text-xs font-medium">
+                Já sei
+              </span>
+            )}
             {isOverdue && (
               <span className="rounded-full bg-orange-100 text-orange-700 px-2 py-0.5 text-xs font-medium">
-                Review due
+                Revisão pendente
               </span>
             )}
           </div>

@@ -53,13 +53,37 @@ export function TaskItem({ task, onComplete }: TaskItemProps) {
 
   if (task.status !== "pending") {
     return (
-      <div className="flex items-center gap-3 rounded-lg border bg-muted/30 px-4 py-3 text-muted-foreground">
+      <div
+        className={`flex items-center gap-3 rounded-lg border px-4 py-3 transition-all ${
+          task.status === "completed"
+            ? "bg-green-50 border-green-200"
+            : "bg-muted/30 border-border"
+        }`}
+      >
         {task.status === "completed" ? (
           <CheckCircle2 className="h-4 w-4 text-green-500 shrink-0" />
         ) : (
-          <SkipForward className="h-4 w-4 shrink-0" />
+          <SkipForward className="h-4 w-4 shrink-0 text-muted-foreground" />
         )}
-        <span className="text-sm line-through">{task.topicTitle}</span>
+        <div className="flex-1 min-w-0">
+          <p
+            className={`text-sm ${
+              task.status === "completed"
+                ? "font-medium text-green-800"
+                : "text-muted-foreground line-through"
+            }`}
+          >
+            {task.topicTitle}
+          </p>
+          {task.status === "completed" && (
+            <p className="text-xs text-green-600 mt-0.5">{task.goalTitle}</p>
+          )}
+        </div>
+        {task.status === "completed" && (
+          <span className="shrink-0 text-xs font-medium text-green-700 bg-green-100 rounded-full px-2 py-0.5">
+            Concluído
+          </span>
+        )}
       </div>
     );
   }
@@ -85,11 +109,11 @@ export function TaskItem({ task, onComplete }: TaskItemProps) {
                   : "bg-primary/10 text-primary"
               }`}
             >
-              {task.taskType === "review" ? "Review" : "New"}
+              {task.taskType === "review" ? "Revisão" : "Novo"}
             </span>
             {isOverdue && (
               <span className="rounded-full bg-orange-100 text-orange-700 px-2 py-0.5 text-xs font-medium">
-                Overdue
+                Atrasado
               </span>
             )}
           </div>
@@ -98,7 +122,7 @@ export function TaskItem({ task, onComplete }: TaskItemProps) {
 
           <div className="flex items-center gap-1.5 mt-1.5 text-xs text-muted-foreground">
             <Clock className="h-3 w-3" />
-            {task.suggestedMinutes} min suggested
+            {task.suggestedMinutes} min sugerido
           </div>
         </div>
 
@@ -109,13 +133,13 @@ export function TaskItem({ task, onComplete }: TaskItemProps) {
               disabled={submitting}
               className="rounded px-2.5 py-1.5 text-xs border hover:bg-muted disabled:opacity-50"
             >
-              Skip
+              Pular
             </button>
             <button
               onClick={() => setShowRating(true)}
               className="rounded px-2.5 py-1.5 text-xs bg-primary text-primary-foreground hover:bg-primary/90"
             >
-              Complete
+              Concluir
             </button>
           </div>
         )}
@@ -123,7 +147,7 @@ export function TaskItem({ task, onComplete }: TaskItemProps) {
 
       {showRating && (
         <div className="mt-4 border-t pt-3 space-y-3">
-          <p className="text-sm font-medium">How confident do you feel?</p>
+          <p className="text-sm font-medium">Qual seu nível de confiança?</p>
           <div className="flex gap-2">
             {[1, 2, 3, 4, 5].map((r) => (
               <button
@@ -140,13 +164,13 @@ export function TaskItem({ task, onComplete }: TaskItemProps) {
             ))}
           </div>
           <p className="text-xs text-muted-foreground text-center">
-            1 = Forgot · 3 = Remembered · 5 = Perfect recall
+            1 = Esqueci · 3 = Lembrei · 5 = Perfeito
           </p>
 
           <textarea
             value={notes}
             onChange={(e) => setNotes(e.target.value)}
-            placeholder="Optional notes…"
+            placeholder="Anotações opcionais…"
             rows={2}
             className="w-full rounded border px-2 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-ring resize-none"
           />
@@ -156,14 +180,14 @@ export function TaskItem({ task, onComplete }: TaskItemProps) {
               onClick={() => { setShowRating(false); setRating(0); }}
               className="text-xs px-3 py-1.5 rounded border hover:bg-muted"
             >
-              Cancel
+              Cancelar
             </button>
             <button
               onClick={handleComplete}
               disabled={rating === 0 || submitting}
               className="text-xs px-3 py-1.5 rounded bg-primary text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
             >
-              {submitting ? "Saving…" : "Submit"}
+              {submitting ? "Salvando…" : "Salvar"}
             </button>
           </div>
         </div>
