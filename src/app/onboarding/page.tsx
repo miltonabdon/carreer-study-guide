@@ -1,12 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { AIGenerationProgress } from "@/components/ui/AIGenerationProgress";
 
 export default function OnboardingPage() {
-  const router = useRouter();
   const { update } = useSession();
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
