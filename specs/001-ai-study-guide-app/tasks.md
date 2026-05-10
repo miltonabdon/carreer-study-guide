@@ -123,8 +123,8 @@
 
 - [x] T027 [P] Update `src/app/api/goals/[goalId]/path/regenerate/route.ts` to wrap AI call in try/catch with fallback (same pattern as T011) for consistency
 - [x] T028 [P] Add error boundary around `src/app/onboarding/page.tsx` wizard: if API call fails show inline retry button, not a broken page
-- [ ] T029 [P] Update `specs/001-ai-study-guide-app/data-model.md` to document new fields: `users.onboardingCompleted`, `dailyPlans.gapDays`, `dailyPlans.gapResolved`
-- [ ] T030 Run full production smoke test after all stories: register → onboarding → dashboard → complete task → settings export → verify JSON contains all data; commit and push to trigger Vercel deploy
+- [x] T029 [P] Update `specs/001-ai-study-guide-app/data-model.md` to document new fields: `users.onboardingCompleted`, `dailyPlans.gapDays`, `dailyPlans.gapResolved`
+- [x] T030 Run full production smoke test after all stories: register → onboarding → dashboard → complete task → settings export → verify JSON contains all data; commit and push to trigger Vercel deploy
 
 ---
 

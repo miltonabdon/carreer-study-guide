@@ -34,6 +34,7 @@ The authenticated account. Single user per account (v1).
 | `password_hash` | TEXT | NOT NULL | bcrypt hash |
 | `display_name` | VARCHAR(100) | NOT NULL | Name shown in UI |
 | `daily_available_minutes` | INT | NOT NULL, DEFAULT 60 | User's stated daily study time (FR-009) |
+| `onboarding_completed` | BOOLEAN | NOT NULL, DEFAULT false | Whether the user finished the first-time onboarding wizard (FR-015); false redirects to `/onboarding` via middleware |
 | `timezone` | VARCHAR(50) | NOT NULL, DEFAULT 'UTC' | IANA timezone string |
 | `created_at` | TIMESTAMP | NOT NULL, DEFAULT NOW() | Account creation |
 | `updated_at` | TIMESTAMP | NOT NULL | Last profile update |
@@ -178,6 +179,8 @@ The AI-generated set of study tasks for a specific calendar day. Maps to FR-003,
 | `available_minutes` | INT | NOT NULL | User's daily limit at generation time |
 | `status` | ENUM | NOT NULL, DEFAULT 'active' | `active`, `completed`, `expired` |
 | `ai_rationale` | TEXT | NULLABLE | Optional AI explanation of today's priorities |
+| `gap_days` | INT | NULLABLE | Number of consecutive missed study days detected before this plan was generated; null when no gap (FR-018) |
+| `gap_resolved` | BOOLEAN | NOT NULL, DEFAULT true | Whether the user has responded to the missed-day recovery modal; false triggers `GapRecoveryModal` on the dashboard until resolved |
 
 **Unique constraint**: `(user_id, plan_date)` — one plan per user per day
 
@@ -186,6 +189,11 @@ The AI-generated set of study tasks for a specific calendar day. Maps to FR-003,
 active    → completed  (all tasks marked done)
 active    → expired    (midnight passes with uncompleted tasks)
 ```
+
+**Gap recovery flow** (when `gap_days >= 2 && gap_resolved = false`):
+- Dashboard renders `GapRecoveryModal` before the plan
+- User chooses "recover" → `gap_resolved = true`, recovery plans created for next `gap_days` days
+- User chooses "resume" → `gap_resolved = true`, normal plan proceeds unchanged
 
 ---
 
