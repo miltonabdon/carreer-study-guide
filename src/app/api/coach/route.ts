@@ -2,7 +2,6 @@ import { streamText } from "ai";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { coachMessages } from "@/lib/db/schema";
-import { eq } from "drizzle-orm";
 import { anthropic, MODEL } from "@/lib/ai/client";
 import { buildCoachSystemPrompt } from "@/lib/ai/prompts";
 import { z } from "zod";
