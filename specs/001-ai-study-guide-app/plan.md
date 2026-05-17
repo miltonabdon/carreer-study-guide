@@ -124,7 +124,7 @@ src/
 
 ## Next Features (Etapa 4+)
 
-These features emerge from the `/speckit-clarify` session (2026-05-10) and spec clarifications:
+These features emerge from the `/speckit-clarify` session (2026-05-10) and updated spec (FR-014, FR-018, FR-019, FR-002 cap, topic limit):
 
 ### FR-015 — Onboarding Wizard
 New users see a 2–3 step wizard before the dashboard: goal creation → priority/date → daily time.  
@@ -137,6 +137,45 @@ When AI is unavailable, fall back to rule-based plan (overdue reviews + next unl
 ### FR-017 — Data Export + Account Deletion
 Export all user data as JSON + permanent account deletion from account settings.  
 **Files to create**: `src/app/api/account/export/route.ts`, `src/app/api/account/delete/route.ts`, `src/app/settings/page.tsx`.
+
+### FR-014 (updated) — Coach Conversation Persistence
+Coaching messages must be persisted to the DB (CoachMessage entity) so conversations survive page reloads and are resumable across sessions.
+- **New DB table**: `coach_messages` (id, user_id, role, content, created_at) — add to `src/lib/db/schema.ts` + migration
+- **New endpoint**: `GET /api/coach/history` — returns all messages ordered by `created_at`
+- **Update**: `POST /api/coach` — after stream completes, persist both the user message and assistant reply to DB
+- **Update**: `src/app/coach/page.tsx` — load history on mount via `GET /api/coach/history`, pass as `initialMessages` to `useChat()`
+- **Update**: `src/app/api/account/delete/route.ts` — include `coach_messages` in cascade delete
+- **Update**: `src/app/api/account/export/route.ts` — include `coach_messages` in JSON export
+
+### FR-014 (updated) — Coach Context Injection
+The AI coach must automatically receive user context per request so guidance is personalized without the user re-describing their situation.
+- **Update**: `POST /api/coach` system prompt — inject: active goal titles/descriptions, current unlocked/in-progress topic titles, today's plan task titles
+- **Update**: `src/lib/ai/prompts.ts` (or equivalent) — `buildCoachSystemPrompt(user, goals, activeTopics, todayPlan)` function
+- **DB queries needed at request time**: goals (status='active'), topics (status IN ['unlocked','in_progress'] + goal JOIN), today's plan tasks
+
+### FR-018 — Email Notifications Opt-Out
+Daily email digest is default-on; users can disable from account settings.
+- **DB migration**: Add `email_notifications_enabled BOOLEAN NOT NULL DEFAULT true` to `users` table
+- **Update**: `src/lib/db/schema.ts` — add field to users schema
+- **Update**: `src/app/api/email/daily-digest/route.ts` — filter users by `emailNotificationsEnabled = true` before sending
+- **New endpoint**: `PATCH /api/account/settings` (or extend existing settings PATCH) — accept `emailNotificationsEnabled` boolean
+- **Update**: `src/app/settings/page.tsx` — add toggle UI for email notifications
+
+### FR-019 — Password Reset (Email-Based)
+Self-service password reset via time-limited, single-use token.
+- **New DB table**: `password_reset_tokens` (id, user_id, token_hash, expires_at, used_at, created_at) — add to schema + migration
+- **New endpoint**: `POST /api/auth/forgot-password` — generate token, hash with SHA-256, store, send Resend email with link
+- **New endpoint**: `POST /api/auth/reset-password` — validate token (not used, not expired), atomically mark used, update password_hash
+- **New page**: `src/app/reset-password/page.tsx` — form to enter new password (reads `?token=` from URL)
+- **New page**: `src/app/forgot-password/page.tsx` — email input form
+- **Update**: login page — add "Forgot password?" link
+- **Resend template**: `src/lib/email/templates.ts` — add `passwordResetEmail(resetLink)` template
+
+### FR-002 (updated) — 30-Topic Cap on Learning Paths
+AI path generation must not produce more than 30 topics per goal.
+- **Update**: `src/lib/ai/prompts.ts` — add explicit constraint to the path generation prompt: "Generate at most 30 topics, ordered from foundational to advanced"
+- **Update**: `src/app/api/goals/route.ts` — validate that AI response contains ≤ 30 topics before persisting; truncate if exceeded
+- **Update**: `src/lib/ai/generate.ts` — add `maxTopics: 30` guard in the Zod schema for path generation output
 
 ### Cross-goal Topic Sharing (Clarification Q3)
 Topics with identical titles across goals should share a single entity and unified progress/review schedule. Currently each path has independent topics. Requires data model change + migration.  

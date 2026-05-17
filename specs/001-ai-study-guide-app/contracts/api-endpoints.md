@@ -107,7 +107,7 @@ Create a new learning goal and trigger AI learning path generation.
 }
 ```
 
-**Note**: Learning path generation is synchronous but may take up to 60s (SC-001). Client should show a loading state.
+**Note**: Learning path generation is synchronous but may take up to 60s (SC-001). Client should show a loading state. Response includes `fallbackUsed: boolean` — when `true`, the AI was unavailable and a generic 8-topic path was generated (FR-016); client should show the amber degradation banner.
 
 ---
 
@@ -156,7 +156,7 @@ Get the learning path and all topics for a goal.
     orderIndex: number;
     complexity: 1 | 2 | 3 | 4 | 5;
     estimatedMinutes: number;
-    status: 'locked' | 'unlocked' | 'in_progress' | 'complete' | 'skipped';
+    status: 'locked' | 'unlocked' | 'in_progress' | 'complete' | 'skipped' | 'known';
     resourceUrl: string | null;
     notes: string | null;
     fsrState: 'New' | 'Learning' | 'Review' | 'Relearning';
@@ -187,7 +187,7 @@ Update topic metadata (user-editable fields only).
 {
   resourceUrl?: string | null;
   notes?: string | null;
-  status?: 'unlocked' | 'skipped';  // Only these transitions allowed via PATCH
+  status?: 'unlocked' | 'skipped' | 'known';  // FR-010: 'known' marks topic as already mastered, keeps in review rotation
 }
 ```
 
@@ -286,6 +286,9 @@ Get today's daily plan. Generates a new plan if none exists for today.
   }>;
   completedCount: number;
   totalCount: number;
+  fallbackUsed: boolean;       // true when AI was unavailable and rule-based plan was generated (FR-016)
+  gapDays: number | null;      // consecutive missed days detected before this plan; null = no gap
+  gapResolved: boolean;        // false triggers GapRecoveryModal until user makes a choice
 }
 ```
 
@@ -305,6 +308,26 @@ Mark a task as completed or skipped (triggers session log if completed).
 ```
 
 **Response 200**: Updated task object + updated plan summary
+
+---
+
+### POST /api/plans/today/regenerate
+Regenerate today's plan with a new daily time budget.
+
+**Request**: `{ availableMinutes: number }` — must be > 0
+
+**Response 200**: Same shape as GET /api/plans/today
+
+---
+
+### POST /api/plans/today/gap-resolve
+Resolve a missed-day gap. Triggered when `gapDays >= 2 && gapResolved = false`.
+
+**Request**: `{ choice: 'recover' | 'resume' }`
+- `recover` — creates placeholder plans for the next `gapDays` days with proportional tasks
+- `resume` — marks gap resolved, proceeds with normal today's plan
+
+**Response 200**: Updated plan object (same shape as GET /api/plans/today)
 
 ---
 
@@ -347,8 +370,27 @@ Get the user's progress dashboard data.
 
 ## AI Coach Chat
 
+### GET /api/coach/history
+Load persisted conversation history for the authenticated user.
+
+**Response 200**:
+```ts
+{
+  messages: Array<{
+    id: string;
+    role: 'user' | 'assistant';
+    content: string;
+    createdAt: string;   // ISO timestamp
+  }>;
+}
+```
+
+**Notes**: Returns all messages ordered by `created_at ASC`. Client passes these to `useChat()` as initial messages.
+
+---
+
 ### POST /api/coach
-Streaming endpoint for the AI coaching chat. Returns a streaming text response (text/event-stream).
+Streaming endpoint for the AI coaching chat. Persists each exchange to the CoachMessage table. Returns a streaming text response (text/event-stream).
 
 **Request**:
 ```ts
@@ -363,11 +405,96 @@ Streaming endpoint for the AI coaching chat. Returns a streaming text response (
 
 **Response**: `Content-Type: text/event-stream` — Server-Sent Events stream of text chunks, compatible with Vercel AI SDK `useChat()` hook.
 
-**Context injected server-side** (not sent by client):
-- User's background (from profile)
+**Context injected server-side** (not sent by client, per FR-014):
+- User's active learning goals (title, description, priority)
+- Current unlocked and in-progress topics across all active goals
+- Today's daily plan tasks (titles + status)
 - Current topic title + description (if topicId provided)
-- User's completed topics list (for coaching depth calibration)
-- Last 8 messages from this conversation
+
+**Persistence**: After the response stream completes, both the user message and the assistant reply are saved to `coach_messages`.
+
+---
+
+## Password Reset
+
+### POST /api/auth/forgot-password
+Request a password reset email. Always returns 200 to prevent email enumeration.
+
+**Request**: `{ email: string }`
+
+**Response 200**: `{ message: "If that email is registered, a reset link has been sent." }`
+
+**Side effects**: Creates a `PasswordResetToken` row (invalidates any prior unused token for that user); sends email via Resend with a link to `/reset-password?token=<raw_token>`.
+
+---
+
+### POST /api/auth/reset-password
+Set a new password using a valid reset token.
+
+**Request**:
+```ts
+{
+  token: string;     // raw token from email link
+  password: string;  // min 8 chars, new password
+}
+```
+
+**Response 200**: `{ success: true }`
+
+**Response 400**: `{ error: "Invalid or expired reset token" }` — if token not found, already used, or expired.
+
+**Side effects**: Atomically marks `PasswordResetToken.used_at = NOW()`; updates `User.password_hash`; invalidates all active sessions for that user.
+
+---
+
+## Account Settings
+
+### PATCH /api/account/settings
+Update user profile and notification preferences.
+
+**Request** (all optional):
+```ts
+{
+  displayName?: string;
+  dailyAvailableMinutes?: number;
+  timezone?: string;
+  emailNotificationsEnabled?: boolean;  // FR-018 opt-out toggle
+}
+```
+
+**Response 200**: Updated user profile object.
+
+---
+
+### GET /api/account/settings/me
+Get the current user's profile and settings.
+
+**Response 200**:
+```ts
+{
+  displayName: string;
+  email: string;
+  dailyAvailableMinutes: number;
+  timezone: string;
+  emailNotificationsEnabled: boolean;
+}
+```
+
+---
+
+### GET /api/account/export
+Export all user data as a JSON file (FR-017).
+
+**Response 200**: `Content-Type: application/json` with header `Content-Disposition: attachment; filename="studyguide-export-YYYY-MM-DD.json"`
+
+Body: JSON object with `{ user, goals, topics, studySessions, dailyPlans, coachMessages }`
+
+---
+
+### DELETE /api/account/delete
+Permanently delete the authenticated user's account and all associated data (FR-017).
+
+**Response 204**: No body. All cascade-related rows deleted. Client must call `signOut()` after receiving 204.
 
 ---
 

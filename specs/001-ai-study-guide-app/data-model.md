@@ -17,6 +17,10 @@ User
 User
  └── DailyPlan (1 per day)
        └── DailyPlanTask (2..5)  → references Topic
+User
+ └── CoachMessage (0..*)
+User
+ └── PasswordResetToken (0..*)
 ```
 
 ---
@@ -35,6 +39,7 @@ The authenticated account. Single user per account (v1).
 | `display_name` | VARCHAR(100) | NOT NULL | Name shown in UI |
 | `daily_available_minutes` | INT | NOT NULL, DEFAULT 60 | User's stated daily study time (FR-009) |
 | `onboarding_completed` | BOOLEAN | NOT NULL, DEFAULT false | Whether the user finished the first-time onboarding wizard (FR-015); false redirects to `/onboarding` via middleware |
+| `email_notifications_enabled` | BOOLEAN | NOT NULL, DEFAULT true | Whether daily email digest is sent (FR-018 opt-out); toggled from account settings |
 | `timezone` | VARCHAR(50) | NOT NULL, DEFAULT 'UTC' | IANA timezone string |
 | `created_at` | TIMESTAMP | NOT NULL, DEFAULT NOW() | Account creation |
 | `updated_at` | TIMESTAMP | NOT NULL | Last profile update |
@@ -219,6 +224,46 @@ Individual tasks within a DailyPlan. Maps to FR-003, US1.
 
 ---
 
+### CoachMessage
+
+A persisted message in the AI coaching conversation. Maps to FR-014.
+
+| Field | Type | Constraints | Description |
+|-------|------|-------------|-------------|
+| `id` | UUID | PK | |
+| `user_id` | UUID | FK → User, NOT NULL | Owner |
+| `role` | ENUM | NOT NULL | `user`, `assistant` |
+| `content` | TEXT | NOT NULL | Message content |
+| `created_at` | TIMESTAMP | NOT NULL, DEFAULT NOW() | Message timestamp |
+
+**Indexes**: `(user_id, created_at)` — for ordered conversation retrieval
+
+**Validation rules**:
+- `content` must be non-empty
+- Included in full JSON data export (FR-017) and deleted on account deletion
+
+---
+
+### PasswordResetToken
+
+A single-use token for self-service password reset. Maps to FR-019.
+
+| Field | Type | Constraints | Description |
+|-------|------|-------------|-------------|
+| `id` | UUID | PK | |
+| `user_id` | UUID | FK → User, NOT NULL | Token owner |
+| `token_hash` | TEXT | NOT NULL | SHA-256 hash of the raw token sent in the reset email |
+| `expires_at` | TIMESTAMP | NOT NULL | 1 hour from creation |
+| `used_at` | TIMESTAMP | NULLABLE | Set atomically on use; `null` = still valid |
+| `created_at` | TIMESTAMP | NOT NULL, DEFAULT NOW() | |
+
+**Validation rules**:
+- Token is valid only if `used_at IS NULL AND expires_at > NOW()`
+- On use: atomically set `used_at = NOW()` — reject if already set (prevents replay)
+- At most one active token per user at a time (previous tokens invalidated on new request)
+
+---
+
 ## Relationships Summary
 
 ```
@@ -231,6 +276,8 @@ User (1) ────────────── (*) DailyPlan
 DailyPlan (1) ────────── (*) DailyPlanTask
 DailyPlanTask (*) ───────── (1) Topic
 StudySession (*) ────────── (1) Topic
+User (1) ────────────── (*) CoachMessage
+User (1) ────────────── (*) PasswordResetToken
 ```
 
 ---

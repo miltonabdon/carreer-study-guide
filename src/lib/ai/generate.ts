@@ -16,7 +16,7 @@ const topicSchema = z.object({
 });
 
 const learningPathSchema = z.object({
-  topics: z.array(topicSchema).min(4).max(25),
+  topics: z.array(topicSchema).min(4).max(30),
   totalEstimatedMinutes: z.number().int().positive(),
   completionWeeksEstimate: z.number().int().positive(),
   paceWarning: z.string().nullable(),

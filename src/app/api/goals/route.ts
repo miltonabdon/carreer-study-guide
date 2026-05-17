@@ -125,7 +125,10 @@ export async function POST(request: Request) {
         })
         .returning();
 
-      const topicRows = generated.topics.map((t, i) => ({
+      // Enforce 30-topic cap regardless of what AI returned
+    const cappedTopics = generated.topics.slice(0, 30);
+
+    const topicRows = cappedTopics.map((t, i) => ({
         pathId: path.id,
         title: t.title,
         description: t.description,

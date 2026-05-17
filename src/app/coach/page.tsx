@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import type { Message } from "ai/react";
 import { ChatWindow } from "@/components/coach/ChatWindow";
 import { InputBar } from "@/components/coach/InputBar";
 import { useCoachChat } from "@/lib/hooks/useCoachChat";
@@ -15,16 +16,36 @@ interface Topic {
 export default function CoachPage() {
   const [topics, setTopics] = useState<Topic[]>([]);
   const [selectedTopicId, setSelectedTopicId] = useState<string>("");
+  const [initialMessages, setInitialMessages] = useState<Message[] | undefined>(undefined);
+  const [historyLoaded, setHistoryLoaded] = useState(false);
+
+  // Load persisted conversation history on mount
+  useEffect(() => {
+    fetch("/api/coach/history")
+      .then((r) => r.json())
+      .then((data: { messages: { id: string; role: string; content: string; createdAt: string }[] }) => {
+        const msgs: Message[] = (data.messages ?? []).map((m) => ({
+          id: m.id,
+          role: m.role as "user" | "assistant",
+          content: m.content,
+          createdAt: new Date(m.createdAt),
+        }));
+        setInitialMessages(msgs);
+      })
+      .catch(() => setInitialMessages([]))
+      .finally(() => setHistoryLoaded(true));
+  }, []);
 
   const { messages, input, handleInputChange, handleSubmit, isLoading } = useCoachChat(
-    selectedTopicId || undefined
+    selectedTopicId || undefined,
+    initialMessages
   );
 
   useEffect(() => {
-    // Fetch active topics from all goals
     fetch("/api/goals")
       .then((r) => r.json())
-      .then(async (goals: { id: string; title: string }[]) => {
+      .then(async (goalsData: { goals?: { id: string; title: string }[] } | { id: string; title: string }[]) => {
+        const goals = Array.isArray(goalsData) ? goalsData : (goalsData.goals ?? []);
         const topicPromises = goals.map((g) =>
           fetch(`/api/goals/${g.id}/path`)
             .then((r) => r.json())
@@ -49,6 +70,14 @@ export default function CoachPage() {
 
   function onSubmit() {
     handleSubmit(new Event("submit") as unknown as React.FormEvent<HTMLFormElement>);
+  }
+
+  if (!historyLoaded) {
+    return (
+      <div className="flex h-[calc(100vh-4rem)] items-center justify-center">
+        <p className="text-muted-foreground text-sm">Carregando conversa…</p>
+      </div>
+    );
   }
 
   return (

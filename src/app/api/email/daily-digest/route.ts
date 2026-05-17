@@ -29,10 +29,10 @@ export async function GET(req: NextRequest) {
   const resend = new Resend(resendKey);
   const today = getTodayString();
 
-  // Get all active users with email notifications enabled (all users for now)
   const allUsers = await db
     .select({ id: users.id, email: users.email, displayName: users.displayName })
-    .from(users);
+    .from(users)
+    .where(eq(users.emailNotificationsEnabled, true));
 
   const results: { userId: string; status: "sent" | "skipped" | "error"; reason?: string }[] = [];
 

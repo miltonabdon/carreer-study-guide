@@ -15,6 +15,7 @@ import { relations } from "drizzle-orm";
 // ─── Enums ────────────────────────────────────────────────────────────────────
 
 export const goalPriorityEnum = pgEnum("goal_priority", ["high", "medium", "low"]);
+export const coachMessageRoleEnum = pgEnum("coach_message_role", ["user", "assistant"]);
 export const goalStatusEnum = pgEnum("goal_status", ["active", "paused", "archived"]);
 export const topicStatusEnum = pgEnum("topic_status", [
   "locked",
@@ -40,6 +41,7 @@ export const users = pgTable("users", {
   dailyAvailableMinutes: integer("daily_available_minutes").notNull().default(60),
   timezone: varchar("timezone", { length: 50 }).notNull().default("UTC"),
   onboardingCompleted: boolean("onboarding_completed").notNull().default(false),
+  emailNotificationsEnabled: boolean("email_notifications_enabled").notNull().default(true),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });
@@ -185,12 +187,47 @@ export const dailyPlanTasks = pgTable("daily_plan_tasks", {
   completedAt: timestamp("completed_at"),
 });
 
+// ─── Coach Messages ───────────────────────────────────────────────────────────
+
+export const coachMessages = pgTable("coach_messages", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  userId: uuid("user_id")
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
+  role: coachMessageRoleEnum("role").notNull(),
+  content: text("content").notNull(),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+// ─── Password Reset Tokens ────────────────────────────────────────────────────
+
+export const passwordResetTokens = pgTable("password_reset_tokens", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  userId: uuid("user_id")
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
+  tokenHash: text("token_hash").notNull(),
+  expiresAt: timestamp("expires_at").notNull(),
+  usedAt: timestamp("used_at"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
 // ─── Relations ────────────────────────────────────────────────────────────────
 
 export const usersRelations = relations(users, ({ many }) => ({
   goals: many(learningGoals),
   studySessions: many(studySessions),
   dailyPlans: many(dailyPlans),
+  coachMessages: many(coachMessages),
+  passwordResetTokens: many(passwordResetTokens),
+}));
+
+export const coachMessagesRelations = relations(coachMessages, ({ one }) => ({
+  user: one(users, { fields: [coachMessages.userId], references: [users.id] }),
+}));
+
+export const passwordResetTokensRelations = relations(passwordResetTokens, ({ one }) => ({
+  user: one(users, { fields: [passwordResetTokens.userId], references: [users.id] }),
 }));
 
 export const learningGoalsRelations = relations(learningGoals, ({ one, many }) => ({

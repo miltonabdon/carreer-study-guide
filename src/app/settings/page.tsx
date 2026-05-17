@@ -1,12 +1,41 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { signOut } from "next-auth/react";
-import { Download, Trash2, AlertTriangle } from "lucide-react";
+import { Download, Trash2, AlertTriangle, Bell, BellOff } from "lucide-react";
 
 export default function SettingsPage() {
   const [deleting, setDeleting] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
+  const [emailEnabled, setEmailEnabled] = useState<boolean | null>(null);
+  const [savingEmail, setSavingEmail] = useState(false);
+
+  useEffect(() => {
+    fetch("/api/account/settings/me")
+      .then((r) => r.json())
+      .then((data) => {
+        if (typeof data.emailNotificationsEnabled === "boolean") {
+          setEmailEnabled(data.emailNotificationsEnabled);
+        }
+      })
+      .catch(() => {});
+  }, []);
+
+  async function toggleEmailNotifications() {
+    if (emailEnabled === null) return;
+    const next = !emailEnabled;
+    setSavingEmail(true);
+    try {
+      const res = await fetch("/api/account/settings", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ emailNotificationsEnabled: next }),
+      });
+      if (res.ok) setEmailEnabled(next);
+    } finally {
+      setSavingEmail(false);
+    }
+  }
 
   async function handleDelete() {
     setDeleting(true);
@@ -24,6 +53,42 @@ export default function SettingsPage() {
         <h1 className="text-2xl font-bold">Configurações</h1>
         <p className="text-muted-foreground text-sm mt-1">Gerencie seus dados e conta</p>
       </div>
+
+      {/* Email Notifications */}
+      <section className="border rounded-lg p-6 space-y-3">
+        <h2 className="font-semibold text-lg">Notificações por e-mail</h2>
+        <p className="text-sm text-muted-foreground">
+          Receba um resumo diário com as tarefas do dia no seu e-mail.
+        </p>
+        {emailEnabled !== null && (
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2 text-sm">
+              {emailEnabled ? (
+                <>
+                  <Bell className="h-4 w-4 text-green-600" />
+                  <span>E-mails diários ativados</span>
+                </>
+              ) : (
+                <>
+                  <BellOff className="h-4 w-4 text-muted-foreground" />
+                  <span className="text-muted-foreground">E-mails diários desativados</span>
+                </>
+              )}
+            </div>
+            <button
+              onClick={toggleEmailNotifications}
+              disabled={savingEmail}
+              className={`rounded-md px-4 py-2 text-sm font-medium transition-colors disabled:opacity-50 ${
+                emailEnabled
+                  ? "border hover:bg-muted"
+                  : "bg-primary text-primary-foreground hover:bg-primary/90"
+              }`}
+            >
+              {savingEmail ? "Salvando…" : emailEnabled ? "Desativar" : "Ativar"}
+            </button>
+          </div>
+        )}
+      </section>
 
       {/* Export */}
       <section className="border rounded-lg p-6 space-y-3">

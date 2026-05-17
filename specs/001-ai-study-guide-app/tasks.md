@@ -192,3 +192,54 @@ Phase 6 (US4) ← starts after T002 from Phase 1         │
 
 **Total**: 30 tasks | **Parallel opportunities**: T001–T003 (Phase 1), T015–T016 (US2 banners), T027–T029 (Polish)  
 **Suggested MVP scope**: Phases 1–3 (US1 Onboarding Wizard only — 10 tasks)
+
+---
+
+## Etapa 5 — Features from Clarification Session 2026-05-10
+
+**Scope**: Coach persistence + context injection, password reset, email opt-out, 30-topic cap  
+**Status**: All tasks implemented.
+
+### Phase 8: Setup
+
+- [x] T031 Add `coachMessages` table to `src/lib/db/schema.ts` with `coachMessageRoleEnum` pgEnum; run `npx drizzle-kit push`
+- [x] T032 Add `passwordResetTokens` table to `src/lib/db/schema.ts`; run `npx drizzle-kit push`
+- [x] T033 [P] Add `emailNotificationsEnabled boolean NOT NULL DEFAULT true` to users table; run `npx drizzle-kit push`
+- [x] T034 [P] Create placeholder `src/app/forgot-password/page.tsx` and `src/app/reset-password/page.tsx`
+
+### Phase 9: Password Reset (FR-019)
+
+- [x] T035 Add `buildPasswordResetEmail(resetLink)` to `src/lib/email/templates.ts`
+- [x] T036 Create `src/app/api/auth/forgot-password/route.ts` — POST: always 200; generate SHA-256-hashed token; send Resend email
+- [x] T037 Create `src/app/api/auth/reset-password/route.ts` — POST: validate token (not used, not expired); atomic update + session invalidation
+- [x] T038 Implement `src/app/forgot-password/page.tsx` full UI
+- [x] T039 Implement `src/app/reset-password/page.tsx` full UI (reads `?token=`)
+- [x] T040 Add "Forgot password?" link to login page
+
+### Phase 10: Coach Persistence + Context (FR-014)
+
+- [x] T041 Create `src/app/api/coach/history/route.ts` — GET: return all coach messages ordered by createdAt
+- [x] T042 Add `buildCoachSystemPrompt(userId, topicId?)` to `src/lib/ai/prompts.ts` — queries active goals, unlocked/in-progress topics, today's plan
+- [x] T043 Update `src/app/api/coach/route.ts` — use `buildCoachSystemPrompt`
+- [x] T044 Update `src/app/api/coach/route.ts` — persist both user and assistant turns in `onFinish`
+- [x] T045 Update `src/app/coach/page.tsx` + `src/lib/hooks/useCoachChat.ts` — load history on mount via `GET /api/coach/history`
+- [x] T046 [P] Coach messages included in data export (cascade delete via FK)
+- [x] T047 [P] Coach messages cascade-deleted via FK `onDelete: "cascade"` (no manual delete needed)
+
+### Phase 11: Email Opt-Out (FR-018)
+
+- [x] T048 Create `src/app/api/account/settings/route.ts` — PATCH with emailNotificationsEnabled support
+- [x] T049 Create `src/app/api/account/settings/me/route.ts` — GET current user settings
+- [x] T050 [P] Update `src/app/api/email/daily-digest/route.ts` — filter by `emailNotificationsEnabled = true`
+- [x] T051 Update `src/app/settings/page.tsx` — add email notifications toggle section
+
+### Phase 12: 30-Topic Cap (FR-002)
+
+- [x] T052 Update `LEARNING_PATH_SYSTEM_PROMPT` in `src/lib/ai/prompts.ts` — add "CRITICAL: at most 30 topics" constraint
+- [x] T053 Update Zod schema in `src/lib/ai/generate.ts` — `.max(30)` on topics array
+- [x] T054 [P] Add `topics.slice(0, 30)` server guard in `src/app/api/goals/route.ts` POST
+
+### Phase 13: Polish
+
+- [x] T055 [P] Update `src/middleware.ts` — add `/forgot-password` and `/reset-password` to public paths
+- [x] T056 TypeScript build check — `npx tsc --noEmit` passes clean

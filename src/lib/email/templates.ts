@@ -88,3 +88,46 @@ export function buildDailyDigestEmail(data: DailyDigestData): { subject: string;
 
   return { subject, html };
 }
+
+export function buildPasswordResetEmail(resetLink: string): { subject: string; html: string } {
+  const subject = "[StudyGuide] Redefinição de senha";
+
+  const html = `
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
+<body style="font-family:system-ui,sans-serif;background:#f8fafc;margin:0;padding:24px;">
+  <div style="max-width:480px;margin:0 auto;background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,.08);">
+
+    <div style="background:#0f172a;padding:24px 28px;">
+      <p style="color:#94a3b8;font-size:12px;margin:0 0 4px;">StudyGuide AI</p>
+      <h1 style="color:#fff;font-size:20px;margin:0;">Redefinição de senha</h1>
+    </div>
+
+    <div style="padding:24px 28px;">
+      <p style="font-size:14px;color:#334155;margin:0 0 16px;">
+        Recebemos uma solicitação para redefinir a senha da sua conta.
+        Clique no botão abaixo para escolher uma nova senha.
+      </p>
+      <p style="font-size:13px;color:#64748b;margin:0 0 24px;">
+        Este link é válido por <strong>1 hora</strong> e pode ser usado apenas uma vez.
+        Se você não solicitou a redefinição, ignore este e-mail.
+      </p>
+
+      <div style="text-align:center;">
+        <a href="${resetLink}"
+           style="display:inline-block;background:#0f172a;color:#fff;text-decoration:none;padding:12px 28px;border-radius:8px;font-size:14px;font-weight:600;">
+          Redefinir senha →
+        </a>
+      </div>
+    </div>
+
+    <div style="padding:16px 28px;border-top:1px solid #f1f5f9;text-align:center;">
+      <p style="font-size:11px;color:#94a3b8;margin:0;">StudyGuide AI · Se o botão não funcionar, copie e cole este link: ${resetLink}</p>
+    </div>
+  </div>
+</body>
+</html>`;
+
+  return { subject, html };
+}

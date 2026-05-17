@@ -101,7 +101,7 @@ As a professional with clear career objectives in AI and architecture leadership
 ### Functional Requirements
 
 - **FR-001**: System MUST allow users to create learning goals with a title, description, priority level (high/medium/low), and optional target completion date
-- **FR-002**: System MUST generate a structured, ordered learning path for each defined goal, showing topics in dependency order from foundational to advanced with estimated study durations per topic
+- **FR-002**: System MUST generate a structured, ordered learning path for each defined goal, showing topics in dependency order from foundational to advanced with estimated study durations per topic; a single learning path MUST contain at most 30 topics — the AI generation prompt must enforce this cap to keep paths focused and completable
 - **FR-003**: System MUST generate a personalized daily study plan containing 2–5 prioritized tasks, respecting the user's stated daily time availability and balancing new learning with scheduled reviews
 - **FR-004**: System MUST allow users to log completed study sessions specifying the topic, actual duration, and a self-assessed confidence rating on a 1–5 scale
 - **FR-005**: System MUST implement spaced repetition scheduling: review intervals for each topic are automatically calculated after each session based on the user's confidence rating, following established forgetting-curve principles
@@ -109,23 +109,26 @@ As a professional with clear career objectives in AI and architecture leadership
 - **FR-007**: System MUST provide a progress dashboard showing: study activity heatmap, topics completed per goal, current and longest learning streaks, and per-goal completion percentage
 - **FR-008**: System MUST alert the user when a learning goal's deadline is at risk given the current study pace, and offer actionable options (reduce scope or increase daily time)
 - **FR-009**: System MUST allow users to set and update their available daily study time so the daily plan generation respects that constraint
-- **FR-010**: System MUST allow users to mark individual topics as "already known" (skip in new-learning queue but keep in review rotation) or "needs extra attention" (increase review frequency)
+- **FR-010**: System MUST allow users to mark individual topics as "already known" (skip in new-learning queue but keep in review rotation); the "needs extra attention" variant (boosted review frequency) is deferred to a future version — no field or UI is required for v1
 - **FR-011**: System MUST allow users to attach external resource links (URLs) and personal notes to each topic, so they can record where they are learning that topic
 - **FR-012**: System MUST track daily study streaks and display them prominently to reinforce consistent habits
 - **FR-013**: System MUST allow users to pause, resume, or archive a learning goal without losing progress data
-- **FR-014**: System MUST operate as both a passive intelligent planner AND include an interactive AI coaching interface; the planner generates daily plans, learning paths, and spaced review schedules automatically, while the coaching panel allows the user to ask questions, describe their understanding of a topic, and receive personalized guidance and explanations in a conversational format; both modes must be available in v1, with the planner as the primary entry point
+- **FR-014**: System MUST operate as both a passive intelligent planner AND include an interactive AI coaching interface; the planner generates daily plans, learning paths, and spaced review schedules automatically, while the coaching panel allows the user to ask questions, describe their understanding of a topic, and receive personalized guidance and explanations in a conversational format; coaching conversation history MUST be persisted to the database so the user can resume prior conversations across sessions; the AI coach MUST automatically receive as context: the user's active learning goals, their current unlocked and in-progress topics, and today's daily plan — this context is injected into the system prompt on every request so guidance is personalized without requiring the user to re-describe their situation; both modes must be available in v1, with the planner as the primary entry point
 - **FR-015**: System MUST present a guided onboarding wizard
 - **FR-016**: System MUST implement graceful degradation when the AI service is unavailable
-- **FR-017**: System MUST provide a data portability and account deletion feature: users can export all their data (goals, learning paths, topics, study sessions, daily plans) as a single JSON file; users can permanently delete their account and all associated data; both actions must be accessible from account settings
+- **FR-017**: System MUST provide a data portability and account deletion feature: users can export all their data (goals, learning paths, topics, study sessions, daily plans, coach messages) as a single JSON file; users can permanently delete their account and all associated data; both actions must be accessible from account settings
+- **FR-018**: System MUST send a daily email digest to users by default (opt-out model); the email summarizes today's study plan and links back to the app; users can disable daily email notifications at any time from account settings; the opt-out preference must be persisted per user and respected immediately on the next cron cycle
+- **FR-019**: System MUST provide a self-service password reset flow: user requests a reset via their registered email address, receives a time-limited reset link (valid for 1 hour), clicks the link to set a new password; the reset token is single-use and invalidated after use or expiry
 
 ### Key Entities
 
 - **Learning Goal**: A defined knowledge outcome the user wants to achieve, with title, priority, target date, and status
 - **Learning Path**: An ordered sequence of topics with explicit dependencies, generated per goal, showing progression from foundational to advanced
-- **Topic**: A discrete unit of knowledge within a path; has estimated study time, complexity level, completion status, confidence rating, and an attached review schedule; a single Topic entity may be referenced by multiple Learning Paths across different goals — progress, confidence ratings, and review schedules are shared (not duplicated) across all goals that include the same topic
+- **Topic**: A discrete unit of knowledge within a learning path; has estimated study time, complexity level, completion status, confidence rating, and FSRS scheduling state (stability, difficulty, retrievability, next review date); each Topic belongs to exactly one LearningPath — cross-goal topic sharing is deferred to a future version (see plan.md: "Cross-goal Topic Sharing")
 - **Study Session**: A logged instance of learning activity; captures topic, date, actual duration, and confidence rating (1–5)
 - **Daily Plan**: The system-generated set of study tasks for a specific day, dynamically balancing new learning and spaced reviews within the user's time budget
-- **Review Schedule**: The per-topic calendar of upcoming review sessions, calculated from spaced repetition intervals adjusted by confidence ratings
+- **Review Schedule**: The per-topic set of upcoming review dates, calculated from spaced repetition (FSRS) intervals adjusted by confidence ratings; implemented as embedded fields on the Topic entity (`next_review_at`, `fsrs_stability`, etc.) — no separate table
+- **Coach Message**: A persisted message in an AI coaching conversation; belongs to a user; has role (user or assistant), content, and timestamp; messages are stored in order so conversations can be resumed across sessions; included in the full JSON data export (FR-017)
 
 ## Success Criteria *(mandatory)*
 
@@ -145,9 +148,14 @@ As a professional with clear career objectives in AI and architecture leadership
 
 - Q: What does a new user see on first login with no goals? → A: Guided onboarding wizard (2–3 steps: goal creation → priority/date → daily time) before reaching the dashboard
 - Q: When AI service is unavailable, what should the system do? → A: Fallback automático — reutiliza plano anterior ou gera plano por regras simples; exibe banner sutil, nunca bloqueia o usuário
-- Q: When the same topic appears in multiple goals, how is it handled? → A: Shared entity — single Topic, progress and review schedule unified across all goals referencing it
+- Q: When the same topic appears in multiple goals, how is it handled? → A: In v1, topics are per-path — each learning path has its own topic instances with independent progress and review schedules. Cross-goal topic sharing (unified progress) is acknowledged as desirable but deferred; it requires a schema migration and deduplication logic (see plan.md)
 - Q: After multiple missed study days, how should the system react? → A: Presents a choice to the user — recover missed content (distributed) or resume with normal load from today
 - Q: Can users export or delete their learning data? → A: Yes — full JSON export + permanent account deletion, accessible from account settings
+- Q: Should AI coaching conversation history be persisted across sessions or ephemeral? → A: Persisted — all coach messages stored in DB, loadable across sessions; included in data export and deleted on account deletion
+- Q: Should daily email notifications be opt-in or default-on? → A: Default-on (opt-out model) — all users receive daily emails; opt-out available in account settings; preference stored per user (FR-018)
+- Q: What context should the AI coach automatically receive per request? → A: Active goals + current unlocked/in-progress topics + today's plan — injected into system prompt each request (FR-014)
+- Q: Should a password reset flow be in scope for v1? → A: Yes — email-based reset link, time-limited (1 hour), single-use token (FR-019)
+- Q: Should there be a maximum number of topics per AI-generated learning path? → A: 30 topics max — enforced in AI generation prompt and validated at DB level (FR-002)
 
 ## Assumptions
 
