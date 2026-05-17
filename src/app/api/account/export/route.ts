@@ -8,6 +8,7 @@ import {
   studySessions,
   dailyPlans,
   dailyPlanTasks,
+  coachMessages,
 } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
 
@@ -65,12 +66,18 @@ export async function GET() {
     })
   );
 
+  const messages = await db
+    .select()
+    .from(coachMessages)
+    .where(eq(coachMessages.userId, userId));
+
   const exportData = {
     exportedAt: new Date().toISOString(),
     userId,
     goals: goalsWithPaths,
     studySessions: sessions,
     dailyPlans: plansWithTasks,
+    coachMessages: messages,
   };
 
   const date = new Date().toISOString().slice(0, 10);
