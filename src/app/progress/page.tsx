@@ -37,6 +37,11 @@ export default function ProgressPage() {
       .finally(() => setLoading(false));
   }, []);
 
+  // Hooks must be called unconditionally — before any early return
+  const totalHours = data ? Math.round(data.totalStudyMinutes / 60) : 0;
+  const animatedTopics = useCountUp(data?.totalTopicsStudied ?? 0);
+  const animatedHours = useCountUp(totalHours);
+
   if (loading) {
     return (
       <div className="max-w-4xl mx-auto p-6 space-y-4">
@@ -48,10 +53,6 @@ export default function ProgressPage() {
   }
 
   if (!data) return null;
-
-  const totalHours = Math.round(data.totalStudyMinutes / 60);
-  const animatedTopics = useCountUp(data.totalTopicsStudied);
-  const animatedHours = useCountUp(totalHours);
 
   return (
     <div className="max-w-4xl mx-auto p-6 space-y-6">
