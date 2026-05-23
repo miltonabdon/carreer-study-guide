@@ -19,7 +19,7 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
             <h1 className="font-display font-bold text-5xl tracking-tight leading-tight">
               Aprenda com<br />intenção.
             </h1>
-            <p className="mt-4 text-white/60 text-base leading-relaxed">
+            <p className="mt-4 text-white/75 text-base leading-relaxed">
               Um guia de estudos que se adapta ao seu ritmo, consolida o conhecimento e mantém você no rumo certo — todos os dias.
             </p>
           </div>
@@ -27,16 +27,16 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
           {/* Bullet points */}
           <ul className="flex flex-col gap-5">
             <li className="flex items-start gap-3">
-              <Calendar className="w-4 h-4 text-white/50 mt-0.5 shrink-0" />
-              <span className="text-sm text-white/80 leading-snug">Plano diário personalizado com base nos seus objetivos</span>
+              <Calendar className="w-4 h-4 text-white/70 mt-0.5 shrink-0" />
+              <span className="text-sm text-white/85 leading-snug">Plano diário personalizado com base nos seus objetivos</span>
             </li>
             <li className="flex items-start gap-3">
-              <RotateCcw className="w-4 h-4 text-white/50 mt-0.5 shrink-0" />
-              <span className="text-sm text-white/80 leading-snug">Repetição espaçada com algoritmo FSRS de última geração</span>
+              <RotateCcw className="w-4 h-4 text-white/70 mt-0.5 shrink-0" />
+              <span className="text-sm text-white/85 leading-snug">Repetição espaçada com algoritmo FSRS de última geração</span>
             </li>
             <li className="flex items-start gap-3">
-              <MessageSquare className="w-4 h-4 text-white/50 mt-0.5 shrink-0" />
-              <span className="text-sm text-white/80 leading-snug">Coach IA contextualizado com seu progresso real</span>
+              <MessageSquare className="w-4 h-4 text-white/70 mt-0.5 shrink-0" />
+              <span className="text-sm text-white/85 leading-snug">Coach IA contextualizado com seu progresso real</span>
             </li>
           </ul>
         </div>

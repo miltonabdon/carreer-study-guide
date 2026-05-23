@@ -39,7 +39,7 @@ export function InputBar({ value, onChange, onSubmit, disabled }: InputBarProps)
           onChange={handleChange}
           onKeyDown={handleKeyDown}
           disabled={disabled}
-          placeholder="Ask your coach… (Enter to send, Shift+Enter for newline)"
+          placeholder="Pergunte ao seu coach… (Enter para enviar)"
           rows={1}
           className="flex-1 resize-none bg-transparent text-sm focus:outline-none disabled:opacity-50 min-h-[24px] max-h-40"
         />
@@ -52,7 +52,7 @@ export function InputBar({ value, onChange, onSubmit, disabled }: InputBarProps)
         </button>
       </div>
       <p className="text-xs text-muted-foreground mt-1 text-center">
-        Shift+Enter for new line
+        Shift+Enter para nova linha
       </p>
     </div>
   );

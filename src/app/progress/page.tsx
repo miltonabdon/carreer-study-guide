@@ -5,24 +5,7 @@ import { useEffect, useState } from "react";
 import { StreaksSection } from "@/components/progress/StreaksSection";
 import { StudyHeatmap } from "@/components/progress/StudyHeatmap";
 import { GoalProgressCard } from "@/components/progress/GoalProgressCard";
-
-function useCountUp(target: number, duration = 700) {
-  const [count, setCount] = useState(0);
-  useEffect(() => {
-    if (target === 0) { setCount(0); return; }
-    const steps = 25;
-    const step = Math.max(1, Math.floor(target / steps));
-    const interval = duration / steps;
-    let current = 0;
-    const timer = setInterval(() => {
-      current += step;
-      if (current >= target) { setCount(target); clearInterval(timer); }
-      else setCount(current);
-    }, interval);
-    return () => clearInterval(timer);
-  }, [target, duration]);
-  return count;
-}
+import { useCountUp } from "@/lib/hooks/useCountUp";
 
 interface ProgressData {
   streaks: { current: number; longest: number; lastStudyDate: string | null };

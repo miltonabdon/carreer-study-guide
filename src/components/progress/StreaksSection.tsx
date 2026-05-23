@@ -1,30 +1,12 @@
 "use client";
 
-import { useState, useEffect } from "react";
 import { Flame, Trophy, Calendar } from "lucide-react";
+import { useCountUp } from "@/lib/hooks/useCountUp";
 
 interface StreaksSectionProps {
   current: number;
   longest: number;
   lastStudyDate: string | null;
-}
-
-function useCountUp(target: number, duration = 600) {
-  const [count, setCount] = useState(0);
-  useEffect(() => {
-    if (target === 0) return;
-    const steps = 20;
-    const step = target / steps;
-    const interval = duration / steps;
-    let current = 0;
-    const timer = setInterval(() => {
-      current += step;
-      if (current >= target) { setCount(target); clearInterval(timer); }
-      else setCount(Math.floor(current));
-    }, interval);
-    return () => clearInterval(timer);
-  }, [target, duration]);
-  return count;
 }
 
 export function StreaksSection({ current, longest, lastStudyDate }: StreaksSectionProps) {

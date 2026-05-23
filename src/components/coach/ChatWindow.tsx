@@ -61,12 +61,12 @@ export function ChatWindow({ messages, isLoading, onSuggest }: ChatWindowProps) 
       {isLoading && (
         <div className="flex justify-start">
           <div className="bg-muted/80 rounded-xl rounded-bl-sm px-4 py-3">
-            <div className="flex gap-1">
+            <div className="flex gap-1 items-center">
               {[0, 1, 2].map((i) => (
                 <div
                   key={i}
-                  className="h-1.5 w-1.5 rounded-full bg-muted-foreground animate-bounce"
-                  style={{ animationDelay: `${i * 0.15}s` }}
+                  className="h-1.5 w-1.5 rounded-full bg-foreground/40 animate-typing-dot"
+                  style={{ animationDelay: `${i * 0.18}s` }}
                 />
               ))}
             </div>

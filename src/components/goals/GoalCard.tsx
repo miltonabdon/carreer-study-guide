@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { AlertTriangle, Pause, Play } from "lucide-react";
 
@@ -29,6 +29,12 @@ const PRIORITY_COLORS: Record<"high" | "medium" | "low", string> = {
 
 export function GoalCard({ goal, onStatusChange }: GoalCardProps) {
   const [toggling, setToggling] = useState(false);
+  const [barHeight, setBarHeight] = useState(0);
+
+  useEffect(() => {
+    const t = setTimeout(() => setBarHeight(goal.completionPercent), 80);
+    return () => clearTimeout(t);
+  }, [goal.completionPercent]);
 
   const daysLeft = goal.targetDate
     ? Math.ceil((new Date(goal.targetDate).getTime() - Date.now()) / 86400000)
@@ -74,10 +80,10 @@ export function GoalCard({ goal, onStatusChange }: GoalCardProps) {
         {/* Barra vertical de progresso */}
         <div className="w-1 rounded-full bg-muted relative overflow-hidden shrink-0 self-stretch min-h-[80px]">
           <div
-            className={`absolute inset-x-0 bottom-0 rounded-full transition-all duration-700 ${
+            className={`absolute inset-x-0 bottom-0 rounded-full transition-all duration-700 ease-out ${
               goal.atRisk && active ? "bg-amber-500" : "bg-primary"
             }`}
-            style={{ height: `${goal.completionPercent}%` }}
+            style={{ height: `${barHeight}%` }}
           />
         </div>
 

@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import { AlertTriangle } from "lucide-react";
 
 interface GoalProgressCardProps {
@@ -29,6 +30,13 @@ const PRIORITY_LABELS = {
 };
 
 export function GoalProgressCard({ goal }: GoalProgressCardProps) {
+  const [barHeight, setBarHeight] = useState(0);
+
+  useEffect(() => {
+    const t = setTimeout(() => setBarHeight(goal.completionPercent), 80);
+    return () => clearTimeout(t);
+  }, [goal.completionPercent]);
+
   const estimatedDate = goal.estimatedCompletionDate
     ? new Date(goal.estimatedCompletionDate + "T12:00:00").toLocaleDateString("pt-BR", {
         month: "short",
@@ -51,8 +59,8 @@ export function GoalProgressCard({ goal }: GoalProgressCardProps) {
       {/* Vertical progress bar */}
       <div className="w-1 rounded-full bg-muted relative overflow-hidden self-stretch min-h-[48px]">
         <div
-          className={`absolute inset-x-0 bottom-0 rounded-full transition-all ${goal.atRisk ? "bg-amber-500" : "bg-primary"}`}
-          style={{ height: `${goal.completionPercent}%` }}
+          className={`absolute inset-x-0 bottom-0 rounded-full transition-all duration-700 ease-out ${goal.atRisk ? "bg-amber-500" : "bg-primary"}`}
+          style={{ height: `${barHeight}%` }}
         />
       </div>
 
