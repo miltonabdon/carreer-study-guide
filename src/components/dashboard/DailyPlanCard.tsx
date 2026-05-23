@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect } from "react";
 import { TaskItem } from "./TaskItem";
-import { Brain, Pencil, Check, X, AlertTriangle, Trophy } from "lucide-react";
+import { Brain, Pencil, Check, X, AlertTriangle, Trophy, BookOpen } from "lucide-react";
 
 interface PlanTask {
   id: string;
@@ -74,9 +74,9 @@ export function DailyPlanCard({ plan, onTaskComplete, onRegenerate }: DailyPlanC
   }
 
   return (
-    <div className="rounded-lg border bg-card shadow-sm overflow-hidden">
+    <div className="rounded-xl border border-border/60 bg-card shadow-sm overflow-hidden">
       {/* Header */}
-      <div className="px-5 py-4 border-b bg-muted/30">
+      <div className="px-5 py-4 border-b bg-gradient-to-r from-primary/5 to-transparent">
         <div className="flex items-center justify-between">
           <div>
             <h2 className="font-semibold">Plano do Dia</h2>
@@ -122,7 +122,7 @@ export function DailyPlanCard({ plan, onTaskComplete, onRegenerate }: DailyPlanC
         {total > 0 && (
           <div className="mt-3">
             {/* Progress bar */}
-            <div className="h-2.5 w-full rounded-full bg-muted overflow-hidden">
+            <div className="h-1.5 w-full rounded-full bg-primary/15 overflow-hidden">
               <div
                 className="h-full rounded-full transition-all duration-700"
                 style={{
@@ -154,9 +154,14 @@ export function DailyPlanCard({ plan, onTaskComplete, onRegenerate }: DailyPlanC
       {/* Tasks */}
       <div className="p-4 space-y-3">
         {plan.tasks.length === 0 ? (
-          <div className="py-8 text-center text-muted-foreground">
-            <p className="text-sm">Nenhuma tarefa por hoje.</p>
-            <p className="text-xs mt-1">Crie uma meta de aprendizado para começar.</p>
+          <div className="py-12 text-center space-y-3">
+            <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center mx-auto">
+              <BookOpen className="h-6 w-6 text-primary" />
+            </div>
+            <div>
+              <p className="text-sm font-medium text-foreground">Nenhuma tarefa hoje</p>
+              <p className="text-xs text-muted-foreground mt-1">Crie uma meta de aprendizado para gerar seu plano diário.</p>
+            </div>
           </div>
         ) : (
           plan.tasks.map((task) => (

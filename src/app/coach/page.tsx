@@ -83,15 +83,17 @@ export default function CoachPage() {
   return (
     <div className="flex flex-col h-[calc(100vh-4rem)] max-w-2xl mx-auto">
       {/* Header */}
-      <div className="flex items-center gap-3 border-b px-4 py-3 bg-background">
-        <Brain className="h-5 w-5 text-primary" />
-        <h1 className="font-semibold">AI Study Coach</h1>
+      <div className="flex items-center gap-3 px-4 py-3 border-b border-border/60">
+        <div className="w-8 h-8 rounded-xl bg-primary/10 flex items-center justify-center">
+          <Brain className="h-4 w-4 text-primary" />
+        </div>
+        <h1 className="font-display font-semibold text-sm">Coach IA</h1>
 
         {topics.length > 0 && (
           <select
             value={selectedTopicId}
             onChange={(e) => setSelectedTopicId(e.target.value)}
-            className="ml-auto rounded-md border px-2 py-1 text-sm bg-background max-w-[220px]"
+            className="ml-auto border-0 bg-muted rounded-lg px-3 py-1.5 text-sm max-w-[220px]"
           >
             <option value="">No topic context</option>
             {topics.map((t) => (
@@ -106,6 +108,9 @@ export default function CoachPage() {
       <ChatWindow
         messages={messages.map((m) => ({ id: m.id, role: m.role as "user" | "assistant", content: m.content }))}
         isLoading={isLoading}
+        onSuggest={(q) => {
+          handleInputChange({ target: { value: q } } as React.ChangeEvent<HTMLInputElement>);
+        }}
       />
 
       <InputBar

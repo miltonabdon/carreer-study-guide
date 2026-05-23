@@ -12,9 +12,9 @@ interface StudyHeatmapProps {
 
 function getColor(count: number): string {
   if (count === 0) return "bg-muted";
-  if (count === 1) return "bg-green-200 dark:bg-green-900";
-  if (count === 2) return "bg-green-400 dark:bg-green-700";
-  return "bg-green-600 dark:bg-green-500";
+  if (count === 1) return "bg-primary/20";
+  if (count === 2) return "bg-primary/50";
+  return "bg-primary/90";
 }
 
 export function StudyHeatmap({ weeklyActivity }: StudyHeatmapProps) {
@@ -38,8 +38,8 @@ export function StudyHeatmap({ weeklyActivity }: StudyHeatmapProps) {
   }
 
   return (
-    <div className="rounded-lg border bg-card p-4">
-      <h3 className="text-sm font-medium mb-3">90-day activity</h3>
+    <div>
+      <p className="text-xs font-medium text-muted-foreground uppercase tracking-widest mb-3">Atividade — 90 dias</p>
       <div className="flex gap-1 overflow-x-auto pb-2">
         {weeks.map((week, wi) => (
           <div key={wi} className="flex flex-col gap-1">
@@ -50,7 +50,7 @@ export function StudyHeatmap({ weeklyActivity }: StudyHeatmapProps) {
                 <div
                   key={date}
                   title={`${label}: ${count} session${count !== 1 ? "s" : ""}${activity ? `, ${activity.totalMinutes} min` : ""}`}
-                  className={`h-3 w-3 rounded-sm ${getColor(count)} cursor-default`}
+                  className={`h-3.5 w-3.5 rounded-sm ${getColor(count)} cursor-default`}
                 />
               );
             })}
@@ -58,11 +58,11 @@ export function StudyHeatmap({ weeklyActivity }: StudyHeatmapProps) {
         ))}
       </div>
       <div className="flex items-center gap-2 mt-3 text-xs text-muted-foreground">
-        <span>Less</span>
+        <span>Menos</span>
         {[0, 1, 2, 3].map((c) => (
-          <div key={c} className={`h-3 w-3 rounded-sm ${getColor(c)}`} />
+          <div key={c} className={`h-3.5 w-3.5 rounded-sm ${getColor(c)}`} />
         ))}
-        <span>More</span>
+        <span>Mais</span>
       </div>
     </div>
   );

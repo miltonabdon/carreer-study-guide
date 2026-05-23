@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { BookOpen, Clock } from "lucide-react";
 import { StreaksSection } from "@/components/progress/StreaksSection";
 import { StudyHeatmap } from "@/components/progress/StudyHeatmap";
 import { GoalProgressCard } from "@/components/progress/GoalProgressCard";
@@ -52,26 +51,24 @@ export default function ProgressPage() {
 
   return (
     <div className="max-w-4xl mx-auto p-6 space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold">Progress</h1>
-        <p className="text-sm text-muted-foreground mt-1">Your study history and goal tracking</p>
-      </div>
-
-      {/* Top stats */}
-      <div className="grid grid-cols-2 gap-4">
-        <div className="rounded-lg border bg-card p-4 flex items-center gap-3">
-          <BookOpen className="h-5 w-5 text-primary" />
-          <div>
-            <p className="text-xl font-bold">{data.totalTopicsStudied}</p>
-            <p className="text-xs text-muted-foreground">Topics studied</p>
-          </div>
+      {/* Hero stats — horizontal strip, no borders */}
+      <div className="flex gap-8 pb-6 border-b border-border/60 mb-6">
+        <div>
+          <p className="font-display text-4xl font-bold tracking-tight">{data.totalTopicsStudied}</p>
+          <p className="text-xs text-muted-foreground mt-1 uppercase tracking-widest">Tópicos estudados</p>
         </div>
-        <div className="rounded-lg border bg-card p-4 flex items-center gap-3">
-          <Clock className="h-5 w-5 text-primary" />
-          <div>
-            <p className="text-xl font-bold">{totalHours}h</p>
-            <p className="text-xs text-muted-foreground">Total study time</p>
-          </div>
+        <div className="w-px bg-border/60 self-stretch" />
+        <div>
+          <p className="font-display text-4xl font-bold tracking-tight">{totalHours}h</p>
+          <p className="text-xs text-muted-foreground mt-1 uppercase tracking-widest">Tempo total</p>
+        </div>
+        <div className="ml-auto self-center">
+          {data.streaks.current > 0 && (
+            <div className="flex items-center gap-1.5 text-orange-500">
+              <span className="text-2xl font-display font-bold">{data.streaks.current}</span>
+              <span className="text-xs font-medium">dias seguidos</span>
+            </div>
+          )}
         </div>
       </div>
 
@@ -85,10 +82,7 @@ export default function ProgressPage() {
 
       {data.goalProgress.length > 0 && (
         <section>
-          <h2 className="text-sm font-medium text-muted-foreground uppercase tracking-wide mb-3">
-            Goals
-          </h2>
-          <div className="grid gap-4 sm:grid-cols-2">
+          <div className="space-y-3">
             {data.goalProgress.map((goal) => (
               <GoalProgressCard key={goal.id} goal={goal} />
             ))}

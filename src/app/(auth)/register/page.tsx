@@ -24,7 +24,7 @@ export default function RegisterPage() {
         email: form.get("email"),
         password: form.get("password"),
         displayName: form.get("displayName"),
-        dailyAvailableMinutes: Number(form.get("dailyAvailableMinutes") ?? 60),
+        dailyAvailableMinutes: 60,
       }),
     });
 
@@ -45,25 +45,39 @@ export default function RegisterPage() {
   }
 
   return (
-    <div className="rounded-lg border bg-card p-8 shadow-sm">
-      <h1 className="text-2xl font-bold mb-6">Create Account</h1>
+    <div className="flex flex-col gap-8">
+      {/* Heading */}
+      <div>
+        <h1 className="font-display font-bold text-3xl tracking-tight text-foreground">
+          Comece agora.
+        </h1>
+        <p className="mt-1.5 text-sm text-muted-foreground">Crie sua conta gratuitamente.</p>
+      </div>
 
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <div>
-          <label htmlFor="displayName" className="block text-sm font-medium mb-1">
-            Name
+      <form onSubmit={handleSubmit} className="flex flex-col gap-6">
+        {/* Name */}
+        <div className="flex flex-col gap-1.5">
+          <label
+            htmlFor="displayName"
+            className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground"
+          >
+            Nome
           </label>
           <input
             id="displayName"
             name="displayName"
             type="text"
             required
-            className="w-full rounded-md border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+            className="w-full border-0 border-b border-border bg-transparent px-0 py-2 text-sm text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:border-primary transition-colors"
           />
         </div>
 
-        <div>
-          <label htmlFor="email" className="block text-sm font-medium mb-1">
+        {/* Email */}
+        <div className="flex flex-col gap-1.5">
+          <label
+            htmlFor="email"
+            className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground"
+          >
             Email
           </label>
           <input
@@ -71,13 +85,17 @@ export default function RegisterPage() {
             name="email"
             type="email"
             required
-            className="w-full rounded-md border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+            className="w-full border-0 border-b border-border bg-transparent px-0 py-2 text-sm text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:border-primary transition-colors"
           />
         </div>
 
-        <div>
-          <label htmlFor="password" className="block text-sm font-medium mb-1">
-            Password
+        {/* Password */}
+        <div className="flex flex-col gap-1.5">
+          <label
+            htmlFor="password"
+            className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground"
+          >
+            Senha
           </label>
           <input
             id="password"
@@ -85,41 +103,27 @@ export default function RegisterPage() {
             type="password"
             required
             minLength={8}
-            className="w-full rounded-md border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+            className="w-full border-0 border-b border-border bg-transparent px-0 py-2 text-sm text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:border-primary transition-colors"
           />
         </div>
 
-        <div>
-          <label htmlFor="dailyAvailableMinutes" className="block text-sm font-medium mb-1">
-            Daily study time (minutes)
-          </label>
-          <input
-            id="dailyAvailableMinutes"
-            name="dailyAvailableMinutes"
-            type="number"
-            defaultValue={60}
-            min={15}
-            max={480}
-            required
-            className="w-full rounded-md border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
-          />
-        </div>
-
-        {error && <p className="text-sm text-destructive">{error}</p>}
+        {error && (
+          <p className="text-sm text-destructive">{error}</p>
+        )}
 
         <button
           type="submit"
           disabled={loading}
-          className="w-full rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
+          className="w-full h-11 rounded-xl bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 disabled:opacity-50 transition-colors mt-2"
         >
-          {loading ? "Creating account..." : "Create Account"}
+          {loading ? "Criando conta..." : "Criar conta"}
         </button>
       </form>
 
-      <p className="mt-4 text-sm text-center text-muted-foreground">
-        Already have an account?{" "}
-        <Link href="/login" className="text-primary hover:underline">
-          Sign in
+      <p className="text-sm text-center text-muted-foreground">
+        Já tem uma conta?{" "}
+        <Link href="/login" className="text-primary hover:underline font-medium">
+          Entrar
         </Link>
       </p>
     </div>

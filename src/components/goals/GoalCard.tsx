@@ -21,7 +21,7 @@ interface GoalCardProps {
   onStatusChange?: (goalId: string, status: "active" | "paused") => Promise<void>;
 }
 
-const PRIORITY_COLORS = {
+const PRIORITY_COLORS: Record<"high" | "medium" | "low", string> = {
   high: "bg-red-100 text-red-700",
   medium: "bg-yellow-100 text-yellow-700",
   low: "bg-green-100 text-green-700",
@@ -51,11 +51,6 @@ export function GoalCard({ goal, onStatusChange }: GoalCardProps) {
       })
     : null;
 
-  const riskSuggestion =
-    daysLate !== null && daysLate > 30
-      ? "Aumente o tempo diário ou reduza o escopo da meta."
-      : "Levemente atrasado — um pouco mais de tempo diário resolve.";
-
   async function handleToggle(e: React.MouseEvent) {
     e.preventDefault();
     e.stopPropagation();
@@ -66,86 +61,93 @@ export function GoalCard({ goal, onStatusChange }: GoalCardProps) {
     setToggling(false);
   }
 
+  const paused = goal.status === "paused";
+  const active = goal.status === "active";
+
   return (
     <Link href={`/goals/${goal.id}/path`} className="block">
       <div
-        className={`rounded-lg border bg-card p-5 shadow-sm hover:shadow-md transition-shadow ${
-          goal.status === "paused" ? "opacity-70" : ""
+        className={`rounded-xl border border-border/60 bg-card hover:shadow-md hover:border-primary/20 transition-all duration-200 p-5 flex gap-4 ${
+          paused ? "opacity-60" : ""
         }`}
       >
-        <div className="flex items-start justify-between gap-3 mb-3">
-          <h3 className="font-semibold text-base leading-tight flex-1 min-w-0">{goal.title}</h3>
-          <div className="flex items-center gap-2 shrink-0">
-            <span
-              className={`rounded-full px-2 py-0.5 text-xs font-medium capitalize ${PRIORITY_COLORS[goal.priority]}`}
-            >
-              {goal.priority}
-            </span>
-            {onStatusChange && (goal.status === "active" || goal.status === "paused") && (
-              <button
-                onClick={handleToggle}
-                disabled={toggling}
-                title={goal.status === "active" ? "Pausar meta" : "Retomar meta"}
-                className={`rounded p-1 transition-colors disabled:opacity-50 ${
-                  goal.status === "paused"
-                    ? "text-primary hover:bg-primary/10"
-                    : "text-muted-foreground hover:text-foreground hover:bg-muted"
-                }`}
-              >
-                {goal.status === "paused" ? (
-                  <Play className="h-3.5 w-3.5" />
-                ) : (
-                  <Pause className="h-3.5 w-3.5" />
-                )}
-              </button>
-            )}
-          </div>
+        {/* Barra vertical de progresso */}
+        <div className="w-1 rounded-full bg-muted relative overflow-hidden shrink-0 self-stretch min-h-[80px]">
+          <div
+            className={`absolute inset-x-0 bottom-0 rounded-full transition-all duration-700 ${
+              goal.atRisk && active ? "bg-amber-500" : "bg-primary"
+            }`}
+            style={{ height: `${goal.completionPercent}%` }}
+          />
         </div>
 
-        {goal.status === "paused" && (
-          <div className="rounded-md bg-muted px-2.5 py-1.5 mb-3 text-xs text-muted-foreground">
-            Meta pausada — revisões suspensas
-          </div>
-        )}
-
-        <p className="text-sm text-muted-foreground line-clamp-2 mb-4">{goal.description}</p>
-
-        {goal.atRisk && goal.status === "active" && (
-          <div className="rounded-md bg-amber-50 border border-amber-200 px-3 py-2 mb-3 text-xs text-amber-700 space-y-1">
-            <div className="flex items-center gap-1.5 font-medium">
-              <AlertTriangle className="h-3.5 w-3.5 shrink-0" />
-              Atraso no ritmo
-              {daysLate !== null && daysLate > 0 && (
-                <span className="font-normal">— {daysLate} dia{daysLate !== 1 ? "s" : ""} atrasado</span>
+        {/* Conteúdo */}
+        <div className="flex-1 min-w-0">
+          {/* Header: title + priority + pause button */}
+          <div className="flex items-start justify-between gap-3 mb-2">
+            <h3 className="font-semibold text-base leading-tight flex-1 min-w-0">{goal.title}</h3>
+            <div className="flex items-center gap-2 shrink-0">
+              <span
+                className={`rounded-md px-2 py-0.5 text-xs font-medium capitalize ${PRIORITY_COLORS[goal.priority]}`}
+              >
+                {goal.priority}
+              </span>
+              {onStatusChange && (goal.status === "active" || goal.status === "paused") && (
+                <button
+                  onClick={handleToggle}
+                  disabled={toggling}
+                  title={goal.status === "active" ? "Pausar meta" : "Retomar meta"}
+                  className={`rounded p-1 transition-colors disabled:opacity-50 ${
+                    paused
+                      ? "text-primary hover:bg-primary/10"
+                      : "text-muted-foreground hover:text-foreground hover:bg-muted"
+                  }`}
+                >
+                  {paused ? (
+                    <Play className="h-3.5 w-3.5" />
+                  ) : (
+                    <Pause className="h-3.5 w-3.5" />
+                  )}
+                </button>
               )}
             </div>
-            {estDateLabel && (
-              <p>Conclusão estimada: <span className="font-medium">{estDateLabel}</span></p>
-            )}
-            <p className="text-amber-600">{riskSuggestion}</p>
           </div>
-        )}
 
-        <div className="space-y-1">
-          <div className="flex justify-between text-xs text-muted-foreground">
-            <span>
-              {goal.completedTopics} / {goal.totalTopics} tópicos
-            </span>
-            <span>{goal.completionPercent}%</span>
-          </div>
-          <div className="h-2 w-full rounded-full bg-muted overflow-hidden">
-            <div
-              className={`h-full rounded-full transition-all ${goal.atRisk && goal.status === "active" ? "bg-amber-500" : "bg-primary"}`}
-              style={{ width: `${goal.completionPercent}%` }}
-            />
-          </div>
-        </div>
+          {/* Paused notice */}
+          {paused && (
+            <p className="text-xs text-muted-foreground mb-2">Meta pausada — revisões suspensas</p>
+          )}
 
-        {daysLeft !== null && goal.status === "active" && (
-          <p className={`mt-3 text-xs ${daysLeft < 14 ? "text-destructive" : "text-muted-foreground"}`}>
-            {daysLeft > 0 ? `${daysLeft} dias restantes` : `${Math.abs(daysLeft)} dias em atraso`}
+          {/* Description */}
+          <p className="text-sm text-muted-foreground line-clamp-2">{goal.description}</p>
+
+          {/* atRisk inline */}
+          {goal.atRisk && active && (
+            <p className="text-xs text-amber-600 flex items-center gap-1 mt-2">
+              <AlertTriangle className="h-3 w-3 shrink-0" />
+              {daysLate !== null && daysLate > 0
+                ? `${daysLate} dias atrasado`
+                : "Ritmo abaixo do esperado"}
+              {estDateLabel && ` · conclusão estimada ${estDateLabel}`}
+            </p>
+          )}
+
+          {/* Stats */}
+          <p className="text-xs text-muted-foreground mt-3">
+            {goal.completedTopics}/{goal.totalTopics} tópicos · {goal.completionPercent}%
           </p>
-        )}
+
+          {/* Days left */}
+          {daysLeft !== null && active && (
+            <p
+              className={`mt-1 text-xs ${daysLeft < 14 ? "text-destructive" : "text-muted-foreground"}`}
+            >
+              {daysLeft > 0
+                ? `${daysLeft} dias restantes`
+                : `${Math.abs(daysLeft)} dias em atraso`}
+            </p>
+          )}
+        </div>
       </div>
     </Link>
   );

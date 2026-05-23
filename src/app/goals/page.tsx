@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Plus } from "lucide-react";
+import { Plus, BookOpen } from "lucide-react";
 import { GoalCard } from "@/components/goals/GoalCard";
 import { GoalCreateForm } from "@/components/goals/GoalCreateForm";
 
@@ -51,47 +51,56 @@ export default function GoalsPage() {
 
   return (
     <div className="max-w-4xl mx-auto p-6">
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex items-end justify-between mb-8">
         <div>
-          <h1 className="text-2xl font-bold">Learning Goals</h1>
-          <p className="text-sm text-muted-foreground mt-1">
-            {active.length} active {active.length === 1 ? "goal" : "goals"}
+          <p className="text-xs font-medium text-muted-foreground uppercase tracking-widest mb-1">
+            Seus objetivos
           </p>
+          <h1 className="font-display text-3xl font-bold tracking-tight">Metas de Aprendizado</h1>
         </div>
         <button
           onClick={() => setShowCreate(true)}
-          className="flex items-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90"
+          className="flex items-center gap-2 bg-primary text-primary-foreground rounded-xl px-4 py-2.5 text-sm font-medium hover:bg-primary/90 transition-colors"
         >
-          <Plus className="h-4 w-4" />
-          New Goal
+          <Plus className="h-4 w-4" /> Nova meta
         </button>
       </div>
 
       {loading ? (
-        <div className="grid gap-4 sm:grid-cols-2">
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-2">
           {[1, 2, 3].map((i) => (
-            <div key={i} className="h-40 rounded-lg border bg-muted animate-pulse" />
+            <div key={i} className="h-40 rounded-xl border bg-muted animate-pulse" />
           ))}
         </div>
       ) : goals.length === 0 ? (
-        <div className="flex flex-col items-center justify-center rounded-lg border border-dashed py-20 text-center">
-          <p className="text-muted-foreground mb-4">No learning goals yet</p>
+        <div className="py-20 text-center space-y-4">
+          <div className="w-16 h-16 rounded-2xl bg-muted flex items-center justify-center mx-auto">
+            <BookOpen className="h-8 w-8 text-muted-foreground" />
+          </div>
+          <div>
+            <p className="font-display font-semibold text-foreground">Nenhuma meta ainda</p>
+            <p className="text-sm text-muted-foreground mt-1">
+              Defina o que quer aprender e a IA vai criar um caminho estruturado.
+            </p>
+          </div>
           <button
             onClick={() => setShowCreate(true)}
-            className="flex items-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90"
+            className="inline-flex items-center gap-2 bg-primary text-primary-foreground rounded-xl px-4 py-2.5 text-sm font-medium hover:bg-primary/90 transition-colors"
           >
-            <Plus className="h-4 w-4" />
-            Create your first goal
+            <Plus className="h-4 w-4" /> Criar primeira meta
           </button>
         </div>
       ) : (
         <div className="space-y-6">
           {active.length > 0 && (
             <section>
-              <h2 className="text-sm font-medium text-muted-foreground uppercase tracking-wide mb-3">
-                Active
-              </h2>
-              <div className="grid gap-4 sm:grid-cols-2">
+              <div className="flex items-center gap-3 mb-4">
+                <span className="text-xs font-medium text-muted-foreground uppercase tracking-widest">
+                  Ativas
+                </span>
+                <div className="flex-1 h-px bg-border/60" />
+              </div>
+              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-2">
                 {active.map((goal) => (
                   <GoalCard key={goal.id} goal={goal} onStatusChange={handleStatusChange} />
                 ))}
@@ -101,10 +110,13 @@ export default function GoalsPage() {
 
           {paused.length > 0 && (
             <section>
-              <h2 className="text-sm font-medium text-muted-foreground uppercase tracking-wide mb-3">
-                Paused
-              </h2>
-              <div className="grid gap-4 sm:grid-cols-2">
+              <div className="flex items-center gap-3 mb-4">
+                <span className="text-xs font-medium text-muted-foreground uppercase tracking-widest">
+                  Pausadas
+                </span>
+                <div className="flex-1 h-px bg-border/60" />
+              </div>
+              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-2">
                 {paused.map((goal) => (
                   <GoalCard key={goal.id} goal={goal} onStatusChange={handleStatusChange} />
                 ))}

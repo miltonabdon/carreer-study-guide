@@ -1,12 +1,17 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Link from "next/link";
-import { Plus } from "lucide-react";
+import { useSession } from "next-auth/react";
 import { DailyPlanCard } from "@/components/dashboard/DailyPlanCard";
 import { GapRecoveryModal } from "@/components/dashboard/GapRecoveryModal";
 import { StreakBadge } from "@/components/dashboard/StreakBadge";
 import { AITechSuggestions } from "@/components/dashboard/AITechSuggestions";
+
+function getGreeting(name: string) {
+  const h = new Date().getHours();
+  const saudacao = h < 12 ? "Bom dia" : h < 18 ? "Boa tarde" : "Boa noite";
+  return name ? `${saudacao}, ${name}` : saudacao;
+}
 
 interface PlanTask {
   id: string;
@@ -34,6 +39,9 @@ interface DailyPlan {
 }
 
 export default function DashboardPage() {
+  const { data: session } = useSession();
+  const firstName = session?.user?.name?.split(" ")[0] ?? "";
+
   const [plan, setPlan] = useState<DailyPlan | null>(null);
   const [loading, setLoading] = useState(true);
   const [streak, setStreak] = useState(0);
@@ -108,47 +116,29 @@ export default function DashboardPage() {
 
   const showGapModal = plan && (plan.gapDays ?? 0) >= 2 && !plan.gapResolved;
 
+  const todayLabel = new Date().toLocaleDateString("pt-BR", {
+    weekday: "long",
+    day: "numeric",
+    month: "long",
+  });
+
   return (
-    <div className="max-w-2xl mx-auto p-6">
+    <div className="max-w-2xl mx-auto px-4 py-8">
       {showGapModal && (
         <GapRecoveryModal gapDays={plan!.gapDays!} onResolve={handleGapResolve} />
       )}
       {/* Header */}
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <h1 className="text-2xl font-bold">Dashboard</h1>
-          <p className="text-sm text-muted-foreground mt-0.5">Your daily study guide</p>
-
-        </div>
+      <div className="flex items-center justify-between mb-1">
+        <p className="font-display text-2xl font-bold tracking-tight text-foreground">
+          {getGreeting(firstName)}
+        </p>
         <StreakBadge currentStreak={streak} overdueReviewCount={overdueCount} />
       </div>
-
-      {/* Quick nav */}
-      <div className="flex gap-3 mb-6">
-        <Link
-          href="/goals"
-          className="flex items-center gap-1.5 rounded-md border px-3 py-1.5 text-sm hover:bg-muted"
-        >
-          <Plus className="h-4 w-4" />
-          Goals
-        </Link>
-        <Link
-          href="/progress"
-          className="rounded-md border px-3 py-1.5 text-sm hover:bg-muted"
-        >
-          Progress
-        </Link>
-        <Link
-          href="/coach"
-          className="rounded-md border px-3 py-1.5 text-sm hover:bg-muted"
-        >
-          AI Coach
-        </Link>
-      </div>
+      <p className="text-xs text-muted-foreground capitalize mb-6">{todayLabel}</p>
 
       {/* Daily Plan */}
       {loading ? (
-        <div className="rounded-lg border bg-muted animate-pulse h-64" />
+        <div className="rounded-xl border bg-muted animate-pulse h-48" />
       ) : plan ? (
         <DailyPlanCard plan={plan} onTaskComplete={handleTaskComplete} onRegenerate={handleRegenerate} />
       ) : (
