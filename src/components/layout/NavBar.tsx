@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { signOut, useSession } from "next-auth/react";
+import { signOut } from "next-auth/react";
 import { LayoutDashboard, BookOpen, TrendingUp, Brain, Settings, LogOut } from "lucide-react";
 
 const NAV_ITEMS = [
@@ -15,8 +15,6 @@ const NAV_ITEMS = [
 
 export function NavBar() {
   const pathname = usePathname();
-  // useSession imported for future avatar/user display
-  const { data: _session } = useSession();
 
   return (
     <header className="sticky top-0 z-40 h-14 border-b border-border/60 bg-background/95 backdrop-blur-sm">
