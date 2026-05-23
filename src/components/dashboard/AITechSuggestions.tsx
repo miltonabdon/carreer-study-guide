@@ -384,14 +384,15 @@ export function AITechSuggestions({ existingGoalTitles = [] }: Props) {
       </div>
 
       <div className="space-y-2.5">
-        {suggestions.map((tech) => {
+        {suggestions.map((tech, index) => {
           const isAdded = added.has(tech.id);
           const isCreating = creating === tech.id;
 
           return (
             <div
               key={tech.id}
-              className="rounded-xl border border-gray-100 bg-white p-4 shadow-sm hover:shadow-md transition-shadow"
+              className="rounded-xl border border-gray-100 bg-white p-4 shadow-sm hover:shadow-md transition-shadow animate-in fade-in slide-in-from-bottom-2 fill-mode-both"
+              style={{ animationDelay: `${index * 70}ms`, animationDuration: '280ms' }}
             >
               <div className="flex items-start justify-between gap-3">
                 <div className="flex-1 min-w-0">

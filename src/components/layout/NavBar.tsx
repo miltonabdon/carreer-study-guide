@@ -45,7 +45,7 @@ export function NavBar() {
                   }`}
                 >
                   <Icon
-                    className={`h-4 w-4 ${active ? "text-primary" : "text-muted-foreground"}`}
+                    className={`h-4 w-4 transition-colors duration-150 ${active ? "text-primary" : "text-muted-foreground"}`}
                   />
                   {label}
                 </Link>
@@ -59,7 +59,7 @@ export function NavBar() {
           {/* Sign out — icon only */}
           <button
             onClick={() => signOut({ callbackUrl: "/login" })}
-            className="ml-3 rounded-lg p-1.5 text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-all duration-150"
+            className="ml-3 rounded-lg p-1.5 text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-all duration-200"
             aria-label="Sign out"
           >
             <LogOut className="h-4 w-4" />

@@ -16,7 +16,11 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     <SessionProvider>
       <div className="min-h-screen flex flex-col">
         <NavBar />
-        <main className="flex-1">{children}</main>
+        <main className="flex-1">
+          <div key={pathname} className="animate-page-enter">
+            {children}
+          </div>
+        </main>
       </div>
     </SessionProvider>
   );

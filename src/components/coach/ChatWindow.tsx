@@ -40,11 +40,12 @@ export function ChatWindow({ messages, isLoading, onSuggest }: ChatWindowProps) 
               "Explique RAG em termos práticos",
               "Diferença entre LoRA e full fine-tuning",
               "Como estruturar um multi-agent system?",
-            ].map((q) => (
+            ].map((q, index) => (
               <button
                 key={q}
                 onClick={() => onSuggest?.(q)}
-                className="text-xs px-3 py-1.5 rounded-full border border-border/80 text-muted-foreground hover:text-foreground hover:border-primary/40 hover:bg-primary/5 transition-all"
+                className="text-xs px-3 py-1.5 rounded-full border border-border/80 text-muted-foreground hover:text-foreground hover:border-primary/40 hover:bg-primary/5 transition-all animate-in fade-in slide-in-from-bottom-2 fill-mode-both duration-250"
+                style={{ animationDelay: `${index * 60}ms` }}
               >
                 {q}
               </button>

@@ -100,9 +100,11 @@ export default function GoalsPage() {
                 </span>
                 <div className="flex-1 h-px bg-border/60" />
               </div>
-              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-2">
-                {active.map((goal) => (
-                  <GoalCard key={goal.id} goal={goal} onStatusChange={handleStatusChange} />
+              <div className="space-y-3">
+                {active.map((goal, index) => (
+                  <div key={goal.id} className="animate-in fade-in slide-in-from-bottom-2 fill-mode-both" style={{ animationDelay: `${index * 60}ms`, animationDuration: '260ms' }}>
+                    <GoalCard goal={goal} onStatusChange={handleStatusChange} />
+                  </div>
                 ))}
               </div>
             </section>
@@ -116,9 +118,11 @@ export default function GoalsPage() {
                 </span>
                 <div className="flex-1 h-px bg-border/60" />
               </div>
-              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-2">
-                {paused.map((goal) => (
-                  <GoalCard key={goal.id} goal={goal} onStatusChange={handleStatusChange} />
+              <div className="space-y-3">
+                {paused.map((goal, index) => (
+                  <div key={goal.id} className="animate-in fade-in slide-in-from-bottom-2 fill-mode-both" style={{ animationDelay: `${index * 60}ms`, animationDuration: '260ms' }}>
+                    <GoalCard goal={goal} onStatusChange={handleStatusChange} />
+                  </div>
                 ))}
               </div>
             </section>

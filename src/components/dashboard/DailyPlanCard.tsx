@@ -35,6 +35,7 @@ export function DailyPlanCard({ plan, onTaskComplete, onRegenerate }: DailyPlanC
   const [editingMinutes, setEditingMinutes] = useState(false);
   const [minutesInput, setMinutesInput] = useState(String(plan.availableMinutes));
   const [regenerating, setRegenerating] = useState(false);
+  const [barWidth, setBarWidth] = useState(0);
   const inputRef = useRef<HTMLInputElement>(null);
 
   const completed = plan.tasks.filter((t) => t.status === "completed").length;
@@ -50,6 +51,11 @@ export function DailyPlanCard({ plan, onTaskComplete, onRegenerate }: DailyPlanC
   useEffect(() => {
     if (editingMinutes) inputRef.current?.focus();
   }, [editingMinutes]);
+
+  useEffect(() => {
+    const t = setTimeout(() => setBarWidth(plan.completionPercent), 60);
+    return () => clearTimeout(t);
+  }, [plan.completionPercent]);
 
   async function confirmMinutes() {
     const parsed = parseInt(minutesInput, 10);
@@ -124,9 +130,9 @@ export function DailyPlanCard({ plan, onTaskComplete, onRegenerate }: DailyPlanC
             {/* Progress bar */}
             <div className="h-1.5 w-full rounded-full bg-primary/15 overflow-hidden">
               <div
-                className="h-full rounded-full transition-all duration-700"
+                className="h-full rounded-full transition-all duration-700 ease-out"
                 style={{
-                  width: `${plan.completionPercent}%`,
+                  width: `${barWidth}%`,
                   background: allDone
                     ? "#22c55e"
                     : `linear-gradient(to right, hsl(var(--primary)), hsl(var(--primary) / 0.6))`,
@@ -165,7 +171,12 @@ export function DailyPlanCard({ plan, onTaskComplete, onRegenerate }: DailyPlanC
           </div>
         ) : (
           plan.tasks.map((task) => (
-            <TaskItem key={task.id} task={task} onComplete={onTaskComplete} />
+            <div
+              key={task.id}
+              className={`transition-opacity duration-300${task.status === "completed" ? " opacity-60" : ""}`}
+            >
+              <TaskItem task={task} onComplete={onTaskComplete} />
+            </div>
           ))
         )}
       </div>

@@ -11,7 +11,7 @@ interface StudyHeatmapProps {
 }
 
 function getColor(count: number): string {
-  if (count === 0) return "bg-muted";
+  if (count === 0) return "bg-border";
   if (count === 1) return "bg-primary/20";
   if (count === 2) return "bg-primary/50";
   return "bg-primary/90";
@@ -41,8 +41,8 @@ export function StudyHeatmap({ weeklyActivity }: StudyHeatmapProps) {
     <div>
       <p className="text-xs font-medium text-muted-foreground uppercase tracking-widest mb-3">Atividade — 90 dias</p>
       <div className="flex gap-1 overflow-x-auto pb-2">
-        {weeks.map((week, wi) => (
-          <div key={wi} className="flex flex-col gap-1">
+        {weeks.map((week, colIndex) => (
+          <div key={colIndex} className="flex flex-col gap-1">
             {week.map(({ date, label }) => {
               const activity = activityMap.get(date);
               const count = activity?.sessionCount ?? 0;
@@ -50,7 +50,8 @@ export function StudyHeatmap({ weeklyActivity }: StudyHeatmapProps) {
                 <div
                   key={date}
                   title={`${label}: ${count} session${count !== 1 ? "s" : ""}${activity ? `, ${activity.totalMinutes} min` : ""}`}
-                  className={`h-3.5 w-3.5 rounded-sm ${getColor(count)} cursor-default`}
+                  className={`h-3.5 w-3.5 rounded-sm ${getColor(count)} cursor-default animate-in fade-in fill-mode-both`}
+                  style={{ animationDelay: `${colIndex * 6}ms`, animationDuration: "200ms" }}
                 />
               );
             })}

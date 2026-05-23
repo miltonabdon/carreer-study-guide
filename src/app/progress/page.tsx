@@ -1,9 +1,28 @@
 "use client";
 
 import { useEffect, useState } from "react";
+
 import { StreaksSection } from "@/components/progress/StreaksSection";
 import { StudyHeatmap } from "@/components/progress/StudyHeatmap";
 import { GoalProgressCard } from "@/components/progress/GoalProgressCard";
+
+function useCountUp(target: number, duration = 700) {
+  const [count, setCount] = useState(0);
+  useEffect(() => {
+    if (target === 0) { setCount(0); return; }
+    const steps = 25;
+    const step = Math.max(1, Math.floor(target / steps));
+    const interval = duration / steps;
+    let current = 0;
+    const timer = setInterval(() => {
+      current += step;
+      if (current >= target) { setCount(target); clearInterval(timer); }
+      else setCount(current);
+    }, interval);
+    return () => clearInterval(timer);
+  }, [target, duration]);
+  return count;
+}
 
 interface ProgressData {
   streaks: { current: number; longest: number; lastStudyDate: string | null };
@@ -48,18 +67,20 @@ export default function ProgressPage() {
   if (!data) return null;
 
   const totalHours = Math.round(data.totalStudyMinutes / 60);
+  const animatedTopics = useCountUp(data.totalTopicsStudied);
+  const animatedHours = useCountUp(totalHours);
 
   return (
     <div className="max-w-4xl mx-auto p-6 space-y-6">
       {/* Hero stats — horizontal strip, no borders */}
       <div className="flex gap-8 pb-6 border-b border-border/60 mb-6">
         <div>
-          <p className="font-display text-4xl font-bold tracking-tight">{data.totalTopicsStudied}</p>
+          <p className="font-display text-4xl font-bold tracking-tight animate-count-in fill-mode-both">{animatedTopics}</p>
           <p className="text-xs text-muted-foreground mt-1 uppercase tracking-widest">Tópicos estudados</p>
         </div>
         <div className="w-px bg-border/60 self-stretch" />
         <div>
-          <p className="font-display text-4xl font-bold tracking-tight">{totalHours}h</p>
+          <p className="font-display text-4xl font-bold tracking-tight animate-count-in fill-mode-both">{animatedHours}h</p>
           <p className="text-xs text-muted-foreground mt-1 uppercase tracking-widest">Tempo total</p>
         </div>
         <div className="ml-auto self-center">

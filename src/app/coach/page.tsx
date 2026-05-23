@@ -90,18 +90,23 @@ export default function CoachPage() {
         <h1 className="font-display font-semibold text-sm">Coach IA</h1>
 
         {topics.length > 0 && (
-          <select
-            value={selectedTopicId}
-            onChange={(e) => setSelectedTopicId(e.target.value)}
-            className="ml-auto border-0 bg-muted rounded-lg px-3 py-1.5 text-sm max-w-[220px]"
-          >
-            <option value="">No topic context</option>
-            {topics.map((t) => (
-              <option key={t.id} value={t.id}>
-                {t.title}
-              </option>
-            ))}
-          </select>
+          <div className="relative ml-auto">
+            <select
+              value={selectedTopicId}
+              onChange={(e) => setSelectedTopicId(e.target.value)}
+              className="appearance-none h-8 pl-3 pr-8 rounded-lg bg-muted border-0 text-xs text-foreground font-medium cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary/30"
+            >
+              <option value="">No topic context</option>
+              {topics.map((t) => (
+                <option key={t.id} value={t.id}>
+                  {t.title}
+                </option>
+              ))}
+            </select>
+            <svg className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M4 6l4 4 4-4"/>
+            </svg>
+          </div>
         )}
       </div>
 
