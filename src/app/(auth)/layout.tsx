@@ -4,7 +4,7 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
   return (
     <div className="min-h-screen flex">
       {/* Left panel — hidden on mobile */}
-      <div className="hidden lg:flex lg:w-1/2 flex-col bg-foreground text-white px-14 py-12">
+      <div className="hidden lg:flex lg:w-1/2 flex-col bg-[hsl(224,55%,8%)] text-white px-14 py-12" style={{backgroundImage: "radial-gradient(ellipse at 20% 50%, hsl(243,60%,18%) 0%, transparent 60%), radial-gradient(ellipse at 80% 20%, hsl(243,55%,14%) 0%, transparent 50%)"}}>
         {/* Logo mark */}
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center">
