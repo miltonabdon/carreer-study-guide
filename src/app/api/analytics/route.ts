@@ -7,7 +7,7 @@ import {
   learningGoals,
   studySessions,
 } from "@/lib/db/schema";
-import { eq, and, isNull, inArray, sql } from "drizzle-orm";
+import { eq, and, isNull, sql } from "drizzle-orm";
 import { inferTopicDomains } from "@/lib/ai/generate";
 
 export async function GET(req: Request) {

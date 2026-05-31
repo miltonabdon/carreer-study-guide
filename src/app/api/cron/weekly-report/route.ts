@@ -7,8 +7,6 @@ import {
   weeklyReports,
   careerTargets,
   topics,
-  learningPaths,
-  learningGoals,
 } from "@/lib/db/schema";
 import { eq, and, gte, desc, sql, inArray } from "drizzle-orm";
 import { generateWeeklyInsight, WEEKLY_INSIGHT_FALLBACK } from "@/lib/ai/generate";

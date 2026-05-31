@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Loader2, Badge, Calendar } from "lucide-react";
+import { Loader2, Calendar } from "lucide-react";
 
 interface CareerTarget {
   id: string;

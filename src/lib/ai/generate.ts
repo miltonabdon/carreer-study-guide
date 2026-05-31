@@ -118,7 +118,7 @@ const gapAnalysisSchema = z.object({
 
 export type GapAnalysisResult = z.infer<typeof gapAnalysisSchema>;
 
-function mockGapAnalysis(careerTarget: string): GapAnalysisResult {
+function mockGapAnalysis(_careerTarget: string): GapAnalysisResult {
   return {
     coveredSkills: [
       "Fundamentos de arquitetura de software",

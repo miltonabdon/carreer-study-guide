@@ -9,7 +9,7 @@ import {
   dailyPlans,
   dailyPlanTasks,
 } from "@/lib/db/schema";
-import { eq, and, gte } from "drizzle-orm";
+import { eq, and } from "drizzle-orm";
 import { applyAssessmentModifier } from "@/lib/spaced-repetition/assessment-modifier";
 import type { AssessmentQuestion } from "@/lib/ai/generate";
 

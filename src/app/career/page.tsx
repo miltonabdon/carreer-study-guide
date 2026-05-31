@@ -202,7 +202,7 @@ export default function CareerPage() {
           <RefreshCw className="h-8 w-8 text-muted-foreground" />
           <p className="text-sm font-medium">Nenhuma análise ainda</p>
           <p className="text-xs text-muted-foreground">
-            Clique em "Analisar Gaps de Carreira" para gerar sua primeira análise.
+            Clique em &ldquo;Analisar Gaps de Carreira&rdquo; para gerar sua primeira análise.
           </p>
         </div>
       ) : null}
