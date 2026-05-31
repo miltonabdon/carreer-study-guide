@@ -131,8 +131,9 @@ export async function PATCH(request: Request, { params }: RouteContext) {
         })
         .where(eq(topics.id, task.topicId));
 
-      // Unlock next topic in path if this one is now complete
-      if (newTopicStatus === "complete") {
+      // Always unlock the next topic when completing a new_learning task.
+      // FSRS state controls review scheduling; topic progression should not be gated on it.
+      if (task.taskType === "new_learning") {
         const nextTopics = await tx
           .select({ id: topics.id, status: topics.status })
           .from(topics)
