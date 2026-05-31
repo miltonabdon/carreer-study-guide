@@ -28,14 +28,15 @@ A full-stack web application that acts as an intelligent personal learning compa
 
 ## Constitution Check
 
-*No formal constitution defined for this project. Governance rules below apply.*
+*Constitution v1.0.0 — see `.specify/memory/constitution.md` for full principles.*
 
-**Gates**:
-- ✓ No unnecessary abstractions — direct DB access via Drizzle, no repositories
-- ✓ No feature flags — MOCK_AI is an env-var toggle, not a runtime flag
-- ✓ No backwards-compat shims — schema is fresh, no legacy to support
-- ✓ Security: auth via NextAuth credentials, bcrypt hashing, JWT session, route middleware protection
-- ✓ Redis is optional — graceful null fallback prevents serverless connection issues
+**Gates** (Principles I–VI):
+- ✓ **I. Direct Data Access** — Drizzle ORM used directly in route handlers; no repository classes
+- ✓ **II. Environment-Level Feature Control** — `MOCK_AI=true` env-var toggle; no runtime feature flags
+- ✓ **III. Graceful Degradation** — Redis null fallback, AI rule-based fallback, Resend silent-fail
+- ✓ **IV. Security Baseline** — bcrypt passwords, JWT sessions, middleware route protection, SHA-256 reset tokens
+- ✓ **V. Spec-Driven Development** — all features traced to `FR-xxx` entries and `tasks.md` tasks
+- ✓ **VI. Lean Architecture** — no backwards-compat shims; schema is fresh; MOCK_AI path returns identical types
 
 ---
 

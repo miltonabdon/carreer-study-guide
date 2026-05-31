@@ -9,6 +9,8 @@ import {
   date,
   real,
   pgEnum,
+  jsonb,
+  unique,
 } from "drizzle-orm/pg-core";
 import { relations } from "drizzle-orm";
 
@@ -124,6 +126,7 @@ export const topics = pgTable("topics", {
   status: topicStatusEnum("status").notNull().default("locked"),
   resourceUrl: text("resource_url"),
   notes: text("notes"),
+  domain: text("domain"),
   // FSRS fields
   fsrsState: fsrsStateEnum("fsrs_state").notNull().default("New"),
   fsrsStability: real("fsrs_stability"),
@@ -220,6 +223,10 @@ export const usersRelations = relations(users, ({ many }) => ({
   dailyPlans: many(dailyPlans),
   coachMessages: many(coachMessages),
   passwordResetTokens: many(passwordResetTokens),
+  careerTargets: many(careerTargets),
+  knowledgeAssessments: many(knowledgeAssessments),
+  skillGapReports: many(skillGapReports),
+  weeklyReports: many(weeklyReports),
 }));
 
 export const coachMessagesRelations = relations(coachMessages, ({ one }) => ({
@@ -260,3 +267,114 @@ export const dailyPlanTasksRelations = relations(dailyPlanTasks, ({ one }) => ({
   plan: one(dailyPlans, { fields: [dailyPlanTasks.planId], references: [dailyPlans.id] }),
   topic: one(topics, { fields: [dailyPlanTasks.topicId], references: [topics.id] }),
 }));
+
+// ─── Career Targets ───────────────────────────────────────────────────────────
+
+export const careerTargets = pgTable("career_targets", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  userId: uuid("user_id")
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
+  description: text("description").notNull(),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+export const careerTargetsRelations = relations(careerTargets, ({ one }) => ({
+  user: one(users, { fields: [careerTargets.userId], references: [users.id] }),
+}));
+
+// ─── Knowledge Assessments ────────────────────────────────────────────────────
+
+export const knowledgeAssessments = pgTable(
+  "knowledge_assessments",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    topicId: uuid("topic_id")
+      .notNull()
+      .references(() => topics.id, { onDelete: "cascade" }),
+    questions: jsonb("questions").notNull(),
+    score: integer("score"),
+    assessedDate: date("assessed_date").notNull(),
+    submittedAt: timestamp("submitted_at"),
+    fsrsModified: boolean("fsrs_modified").notNull().default(false),
+    createdAt: timestamp("created_at").notNull().defaultNow(),
+  },
+  (table) => ({
+    uniquePerDay: unique("knowledge_assessments_user_topic_date_unique").on(
+      table.userId,
+      table.topicId,
+      table.assessedDate
+    ),
+  })
+);
+
+export const knowledgeAssessmentsRelations = relations(knowledgeAssessments, ({ one }) => ({
+  user: one(users, { fields: [knowledgeAssessments.userId], references: [users.id] }),
+  topic: one(topics, { fields: [knowledgeAssessments.topicId], references: [topics.id] }),
+}));
+
+// ─── Skill Gap Reports ────────────────────────────────────────────────────────
+
+export const skillGapReports = pgTable("skill_gap_reports", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  userId: uuid("user_id")
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
+  careerTargetId: uuid("career_target_id").references(() => careerTargets.id, {
+    onDelete: "set null",
+  }),
+  careerTargetSnapshot: text("career_target_snapshot").notNull(),
+  generatedAt: timestamp("generated_at").notNull().defaultNow(),
+  coveredSkills: jsonb("covered_skills").notNull().$type<string[]>(),
+  missingSkills: jsonb("missing_skills").notNull().$type<string[]>(),
+  suggestedGoals: jsonb("suggested_goals")
+    .notNull()
+    .$type<Array<{ title: string; rationale: string }>>(),
+  topicsCountAtGeneration: integer("topics_count_at_generation").notNull(),
+});
+
+export const skillGapReportsRelations = relations(skillGapReports, ({ one }) => ({
+  user: one(users, { fields: [skillGapReports.userId], references: [users.id] }),
+  careerTarget: one(careerTargets, {
+    fields: [skillGapReports.careerTargetId],
+    references: [careerTargets.id],
+  }),
+}));
+
+// ─── Weekly Reports ───────────────────────────────────────────────────────────
+
+export const weeklyReports = pgTable(
+  "weekly_reports",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    weekId: varchar("week_id", { length: 8 }).notNull(),
+    generatedAt: timestamp("generated_at").notNull().defaultNow(),
+    periodStart: date("period_start").notNull(),
+    periodEnd: date("period_end").notNull(),
+    topicsCompleted: integer("topics_completed").notNull(),
+    studyHours: real("study_hours").notNull(),
+    streakAtGeneration: integer("streak_at_generation").notNull(),
+    topDomain: text("top_domain"),
+    weakestDomain: text("weakest_domain"),
+    aiInsight: text("ai_insight").notNull(),
+    fallbackUsed: boolean("fallback_used").notNull().default(false),
+    emailSentAt: timestamp("email_sent_at"),
+  },
+  (table) => ({
+    uniquePerWeek: unique("weekly_reports_user_week_unique").on(table.userId, table.weekId),
+  })
+);
+
+export const weeklyReportsRelations = relations(weeklyReports, ({ one }) => ({
+  user: one(users, { fields: [weeklyReports.userId], references: [users.id] }),
+}));
+
+// ─── Extended User Relations ──────────────────────────────────────────────────
+// (Extends existing usersRelations defined above; not re-declared to avoid conflict.
+// Use db.query.users.findMany({ with: { careerTargets: true, ... } }) directly.)

@@ -1,50 +1,186 @@
-# [PROJECT_NAME] Constitution
-<!-- Example: Spec Constitution, TaskFlow Constitution, etc. -->
+<!--
+  Sync Impact Report
+  ==================
+  Version change:   (template — no prior version) → 1.0.0
+  First formal authorship: all principles are new.
+
+  Modified principles:  N/A (first authorship — replaced template placeholders)
+  Added sections:       Core Principles (I–VI), Additional Constraints,
+                        Development Workflow, Governance
+  Removed sections:     All [PLACEHOLDER] tokens replaced
+
+  Templates requiring updates:
+    ✅ .specify/templates/plan-template.md  — Constitution Check section unchanged
+                                              (generic reference; existing plan.md
+                                              already has a concrete filled section)
+    ✅ .specify/templates/spec-template.md  — No changes needed
+    ✅ .specify/templates/tasks-template.md — No changes needed
+
+  Deferred TODOs:       None — all placeholders resolved.
+-->
+
+# AI-Powered Personal Study Guide Constitution
 
 ## Core Principles
 
-### [PRINCIPLE_1_NAME]
-<!-- Example: I. Library-First -->
-[PRINCIPLE_1_DESCRIPTION]
-<!-- Example: Every feature starts as a standalone library; Libraries must be self-contained, independently testable, documented; Clear purpose required - no organizational-only libraries -->
+### I. Direct Data Access
 
-### [PRINCIPLE_2_NAME]
-<!-- Example: II. CLI Interface -->
-[PRINCIPLE_2_DESCRIPTION]
-<!-- Example: Every library exposes functionality via CLI; Text in/out protocol: stdin/args → stdout, errors → stderr; Support JSON + human-readable formats -->
+All database interactions MUST use Drizzle ORM directly from route handlers, planner
+functions, and server utilities. Repository classes, service layers, or data-access
+abstractions between route handlers and Drizzle are prohibited.
 
-### [PRINCIPLE_3_NAME]
-<!-- Example: III. Test-First (NON-NEGOTIABLE) -->
-[PRINCIPLE_3_DESCRIPTION]
-<!-- Example: TDD mandatory: Tests written → User approved → Tests fail → Then implement; Red-Green-Refactor cycle strictly enforced -->
+**Rationale**: This is a single-developer personal-productivity tool. Direct data
+access maximises readability and eliminates indirection overhead that provides no
+benefit at this scale. A shared helper function is justified only when the same
+query appears in three or more call sites.
 
-### [PRINCIPLE_4_NAME]
-<!-- Example: IV. Integration Testing -->
-[PRINCIPLE_4_DESCRIPTION]
-<!-- Example: Focus areas requiring integration tests: New library contract tests, Contract changes, Inter-service communication, Shared schemas -->
+**Compliance test**: `grep -r "class.*Repository\|class.*Service" src/` returns zero
+results (excluding test utilities).
 
-### [PRINCIPLE_5_NAME]
-<!-- Example: V. Observability, VI. Versioning & Breaking Changes, VII. Simplicity -->
-[PRINCIPLE_5_DESCRIPTION]
-<!-- Example: Text I/O ensures debuggability; Structured logging required; Or: MAJOR.MINOR.BUILD format; Or: Start simple, YAGNI principles -->
+---
 
-## [SECTION_2_NAME]
-<!-- Example: Additional Constraints, Security Requirements, Performance Standards, etc. -->
+### II. Environment-Level Feature Control
 
-[SECTION_2_CONTENT]
-<!-- Example: Technology stack requirements, compliance standards, deployment policies, etc. -->
+Runtime behaviour variants MUST be controlled exclusively through environment
+variables (e.g., `MOCK_AI=true`, `REDIS_URL` presence/absence). Feature-flag code
+paths — conditional logic toggled by runtime state, database flags, or configuration
+stored outside env vars — are prohibited.
 
-## [SECTION_3_NAME]
-<!-- Example: Development Workflow, Review Process, Quality Gates, etc. -->
+**Rationale**: Vercel serverless deployments have a single-variable config surface.
+Env-var toggles are transparent in deployment configs, auditable in CI, and require
+no additional infrastructure. `MOCK_AI=true` is the sole sanctioned bypass mechanism
+for the Anthropic API.
 
-[SECTION_3_CONTENT]
-<!-- Example: Code review requirements, testing gates, deployment approval process, etc. -->
+**Compliance test**: No `featureFlag`, `isEnabled()`, or similar toggle abstractions
+exist in `src/`.
+
+---
+
+### III. Graceful Degradation for Optional Services
+
+Optional infrastructure MUST fail silently without blocking users:
+
+- **Redis**: If `REDIS_URL` is absent or unreachable, caching MUST be skipped and
+  all operations MUST proceed without a cache layer. The `ioredis` client MUST
+  initialise as `null` when the URL is absent; callers MUST guard with `if (redis)`.
+- **Anthropic AI API**: If the API call fails for any reason, the system MUST fall
+  back to rule-based or mock output. `generateLearningPath()` and
+  `generateDailyPlan()` MUST never throw to callers; they MUST return a
+  `fallbackUsed: boolean` field so the UI can surface a subtle amber banner.
+- **Email (Resend)**: If `RESEND_API_KEY` is absent or the API call fails, email
+  sending MUST silently skip. No cron job or user-facing action MUST fail because
+  of an email delivery error.
+
+**Rationale**: Free-tier infrastructure (Neon, Upstash, Resend) has usage limits
+and availability constraints. A user's ability to study MUST never depend on the
+availability of optional services.
+
+---
+
+### IV. Security Baseline
+
+The following security properties are NON-NEGOTIABLE for all deployed versions:
+
+- Passwords MUST be hashed with `bcrypt` (minimum 10 rounds) before storage.
+  Plaintext passwords MUST never be persisted or logged.
+- Session tokens MUST be JWT-signed with `NEXTAUTH_SECRET`. Sessions MUST NOT
+  store credentials or sensitive PII beyond `userId`, `email`, and
+  `onboardingCompleted`.
+- All routes under `src/app/api/` except NextAuth callbacks
+  (`/api/auth/[...nextauth]`), `/api/auth/register`, `/api/auth/forgot-password`,
+  and `/api/auth/reset-password` MUST reject unauthenticated requests with HTTP 401.
+- Password reset tokens MUST be stored as SHA-256 hashes. The raw token is
+  transmitted to the user's email only; it MUST NOT be logged or persisted in
+  plaintext.
+- Time-limited tokens MUST expire after 1 hour and MUST be invalidated on first
+  use (single-use enforcement is atomic: mark `used_at` and check in the same
+  transaction).
+
+**Compliance test**: `src/middleware.ts` protects all private routes; `src/lib/auth.ts`
+uses bcrypt; reset-token routes validate expiry and single-use before accepting.
+
+---
+
+### V. Spec-Driven Development
+
+All features requiring schema changes, new API routes, or new UI pages MUST be
+specified in `specs/001-ai-study-guide-app/spec.md` before implementation begins.
+Tasks MUST be derived from a `tasks.md` generated by `/speckit-tasks`. Breaking
+changes to the data model or API contracts MUST be documented in `data-model.md`
+and the relevant `contracts/` file before the change is applied.
+
+**Rationale**: The user built this tool to impose structure on learning. The
+development process mirrors the product's own discipline: plan before act.
+Spec-first development prevents feature creep and ensures retrospective
+traceability for every implemented capability.
+
+**Compliance test**: Every implemented feature in Etapas 1–5 corresponds to an
+`FR-xxx` entry in `spec.md` and at least one task in `tasks.md`.
+
+---
+
+### VI. Lean Architecture
+
+No speculative abstractions, unused code paths, or backwards-compatibility shims
+are permitted:
+
+- Components, hooks, and server functions MUST serve explicit spec requirements.
+  If a requirement is removed, all code serving only that requirement MUST be
+  deleted — no `// removed` comments or `_unused` renames.
+- Helper functions MUST be justified by two or more concrete call sites. A function
+  used once belongs inline.
+- Schema migrations are additive or destructive; no deprecated columns retained
+  "just in case."
+- The `MOCK_AI` code path MUST return output structurally identical to the real AI
+  path (same TypeScript types, same field names). It is a behavioural substitute,
+  not a stub returning empty or partial data.
+
+**Rationale**: Solo-developer tools accumulate dead code rapidly. A lean codebase
+keeps the mental model accurate and review cycles fast.
+
+## Additional Constraints
+
+**Platform**: Vercel serverless — no long-lived processes, no persistent in-memory
+state between requests. All durable state MUST be stored in PostgreSQL (Neon) or
+Redis. Background processing is limited to Vercel Cron Jobs configured in
+`vercel.json`.
+
+**Single-user scope (v1)**: One user per account; no team features, shared learning
+paths, or mentoring dashboards. Multi-tenancy is explicitly out of scope until a
+new spec entry formally introduces it.
+
+**Mobile**: Web-first. Mobile responsiveness is a quality expectation enforced at
+the CSS/layout level. Native mobile apps are out of scope for v1.
+
+**Testing**: Vitest is the test runner. Unit tests are mandatory for the FSRS
+algorithm (`src/lib/spaced-repetition/`). Integration tests MUST use a real test
+database — no database mocking in tests. End-to-end tests are opt-in per feature.
+
+## Development Workflow
+
+1. **Spec first**: Add or update the `FR-xxx` entry in `spec.md`.
+2. **Plan**: If schema changes are needed, update `data-model.md` and `contracts/`.
+3. **Tasks**: Run `/speckit-tasks` to generate or extend `tasks.md`.
+4. **Implement**: Work task by task; mark each `[x]` on completion.
+5. **Validate**: Run `npx tsc --noEmit` + `npm run build` before every deploy.
+   Both MUST pass clean (zero errors, zero type errors).
+6. **Deploy**: Push to `main`; Vercel auto-deploys on push.
 
 ## Governance
-<!-- Example: Constitution supersedes all other practices; Amendments require documentation, approval, migration plan -->
 
-[GOVERNANCE_RULES]
-<!-- Example: All PRs/reviews must verify compliance; Complexity must be justified; Use [GUIDANCE_FILE] for runtime development guidance -->
+This constitution supersedes informal development notes and README guidance.
+All principles use MUST/MUST NOT normative language; compliance is verifiable.
 
-**Version**: [CONSTITUTION_VERSION] | **Ratified**: [RATIFICATION_DATE] | **Last Amended**: [LAST_AMENDED_DATE]
-<!-- Example: Version: 2.1.1 | Ratified: 2025-06-13 | Last Amended: 2025-07-16 -->
+**Amendment procedure**:
+
+1. State the principle being changed and the concrete motivation.
+2. Bump the version per semantic rules:
+   - **MAJOR** — principle removal, redefinition, or incompatible constraint change.
+   - **MINOR** — new principle or section added / materially expanded.
+   - **PATCH** — clarification, wording fix, non-semantic refinement.
+3. Update `LAST_AMENDED_DATE` and the version line below.
+4. Document complexity violations (intentional deviations from a MUST rule) in the
+   `Complexity Tracking` table of the relevant `plan.md` with an explicit
+   justification.
+
+**Version**: 1.0.0 | **Ratified**: 2026-05-29 | **Last Amended**: 2026-05-29

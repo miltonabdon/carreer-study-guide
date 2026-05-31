@@ -62,15 +62,15 @@ export function GoalCreateForm({ onClose }: GoalCreateFormProps) {
         {loading && (
           <div className="py-4 flex flex-col items-center">
             <div className="relative mb-6">
-              <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center shadow-lg shadow-blue-200/60">
-                <svg className="w-7 h-7 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <div className="w-14 h-14 rounded-2xl bg-primary flex items-center justify-center shadow-lg shadow-primary/20">
+                <svg className="w-7 h-7 text-primary-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5}
                     d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z" />
                 </svg>
               </div>
               <span className="absolute -top-1 -right-1 flex h-3.5 w-3.5">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75" />
-                <span className="relative inline-flex rounded-full h-3.5 w-3.5 bg-green-400" />
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-success opacity-75" />
+                <span className="relative inline-flex rounded-full h-3.5 w-3.5 bg-success" />
               </span>
             </div>
 
@@ -161,9 +161,9 @@ export function GoalCreateForm({ onClose }: GoalCreateFormProps) {
 
           {error && <p className="text-sm text-destructive">{error}</p>}
           {fallbackUsed && (
-            <div className="flex items-center gap-2 rounded-md bg-amber-50 border border-amber-200 px-3 py-2">
-              <AlertTriangle className="h-3.5 w-3.5 text-amber-500 shrink-0" />
-              <p className="text-xs text-amber-700">IA indisponível — caminho de aprendizado padrão gerado</p>
+            <div className="flex items-center gap-2 rounded-md bg-warning-subtle border border-warning-border px-3 py-2">
+              <AlertTriangle className="h-3.5 w-3.5 text-warning shrink-0" />
+              <p className="text-xs text-warning-text">IA indisponível — caminho de aprendizado padrão gerado</p>
             </div>
           )}
 

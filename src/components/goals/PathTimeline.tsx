@@ -36,9 +36,9 @@ export function PathTimeline({ topics, onTopicUpdate, onTopicComplete }: PathTim
             <div
               className={`absolute -left-[2.35rem] top-4 h-3 w-3 rounded-full border-2 border-background ring-2 z-10 ${
                 topic.status === "complete"
-                  ? "bg-green-500 ring-green-500"
+                  ? "bg-success ring-success"
                   : topic.status === "known"
-                    ? "bg-blue-400 ring-blue-400"
+                    ? "bg-info ring-info"
                     : topic.status === "in_progress"
                       ? "bg-primary ring-primary"
                       : topic.status === "unlocked"

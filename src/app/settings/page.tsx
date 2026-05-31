@@ -66,7 +66,7 @@ export default function SettingsPage() {
               <div className="flex items-center gap-2 text-sm">
                 {emailEnabled ? (
                   <>
-                    <Bell className="h-4 w-4 text-green-600" />
+                    <Bell className="h-4 w-4 text-success" />
                     <span>E-mails diários ativados</span>
                   </>
                 ) : (

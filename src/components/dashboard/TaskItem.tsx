@@ -66,12 +66,12 @@ export function TaskItem({ task, onComplete }: TaskItemProps) {
       <div
         className={`flex items-center gap-3 rounded-lg border px-4 py-3 transition-all ${
           task.status === "completed"
-            ? "bg-green-50 border-green-200"
+            ? "bg-success-subtle border-success-border"
             : "bg-muted/30 border-border"
         }`}
       >
         {task.status === "completed" ? (
-          <CheckCircle2 className="h-4 w-4 text-green-500 shrink-0" />
+          <CheckCircle2 className="h-4 w-4 text-success shrink-0" />
         ) : (
           <SkipForward className="h-4 w-4 shrink-0 text-muted-foreground" />
         )}
@@ -79,18 +79,18 @@ export function TaskItem({ task, onComplete }: TaskItemProps) {
           <p
             className={`text-sm ${
               task.status === "completed"
-                ? "font-medium text-green-800"
+                ? "font-medium text-success-text"
                 : "text-muted-foreground line-through"
             }`}
           >
             {task.topicTitle}
           </p>
           {task.status === "completed" && (
-            <p className="text-xs text-green-600 mt-0.5">{task.goalTitle}</p>
+            <p className="text-xs text-success-text/70 mt-0.5">{task.goalTitle}</p>
           )}
         </div>
         {task.status === "completed" && (
-          <span className="shrink-0 text-xs font-medium text-green-700 bg-green-100 rounded-full px-2 py-0.5">
+          <span className="shrink-0 text-xs font-medium text-success-text bg-success-subtle border border-success-border rounded-full px-2 py-0.5">
             Concluído
           </span>
         )}
@@ -103,7 +103,7 @@ export function TaskItem({ task, onComplete }: TaskItemProps) {
       <div className="flex items-start gap-3">
         <div className="shrink-0 mt-0.5">
           {task.taskType === "review" ? (
-            <RotateCcw className="h-4 w-4 text-blue-500" />
+            <RotateCcw className="h-4 w-4 text-info" />
           ) : (
             <BookOpen className="h-4 w-4 text-primary" />
           )}
@@ -115,14 +115,14 @@ export function TaskItem({ task, onComplete }: TaskItemProps) {
             <span
               className={`rounded-full px-2 py-0.5 text-xs font-medium ${
                 task.taskType === "review"
-                  ? "bg-blue-100 text-blue-700"
+                  ? "bg-info-subtle text-info-text border border-info-border"
                   : "bg-primary/10 text-primary"
               }`}
             >
               {task.taskType === "review" ? "Revisão" : "Novo"}
             </span>
             {isOverdue && (
-              <span className="rounded-full bg-orange-100 text-orange-700 px-2 py-0.5 text-xs font-medium">
+              <span className="rounded-full bg-warning-subtle text-warning-text border border-warning-border px-2 py-0.5 text-xs font-medium">
                 Atrasado
               </span>
             )}

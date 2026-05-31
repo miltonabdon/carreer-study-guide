@@ -184,7 +184,7 @@ export default function PathPage({ params }: { params: { goalId: string } }) {
                   width: `${pct}%`,
                   background:
                     pct === 100
-                      ? "#22c55e"
+                      ? "hsl(var(--success))"
                       : `linear-gradient(to right, hsl(var(--primary)), hsl(var(--primary) / 0.6))`,
                 }}
               />
@@ -201,7 +201,7 @@ export default function PathPage({ params }: { params: { goalId: string } }) {
 
           {/* Contagem restante ou celebração */}
           {pct === 100 ? (
-            <div className="flex items-center gap-1.5 mt-2 text-green-700">
+            <div className="flex items-center gap-1.5 mt-2 text-success-text">
               <Trophy className="h-3.5 w-3.5" />
               <span className="text-xs font-semibold">Trilha concluída!</span>
             </div>

@@ -69,7 +69,7 @@ export default function ProgressPage() {
         </div>
         <div className="ml-auto self-center">
           {data.streaks.current > 0 && (
-            <div className="flex items-center gap-1.5 text-orange-500">
+            <div className="flex items-center gap-1.5 text-streak">
               <span className="text-2xl font-display font-bold">{data.streaks.current}</span>
               <span className="text-xs font-medium">dias seguidos</span>
             </div>
@@ -96,8 +96,8 @@ export default function ProgressPage() {
       )}
 
       {data.overdueReviews > 0 && (
-        <div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-700">
-          {data.overdueReviews} topic{data.overdueReviews !== 1 ? "s" : ""} due for review — check your dashboard.
+        <div className="rounded-lg border border-warning-border bg-warning-subtle px-4 py-3 text-sm text-warning-text">
+          {data.overdueReviews} tópico{data.overdueReviews !== 1 ? "s" : ""} para revisar — confira seu dashboard.
         </div>
       )}
     </div>

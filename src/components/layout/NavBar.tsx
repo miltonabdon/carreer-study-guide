@@ -3,12 +3,16 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { signOut } from "next-auth/react";
-import { LayoutDashboard, BookOpen, TrendingUp, Brain, Settings, LogOut } from "lucide-react";
+import { LayoutDashboard, BookOpen, TrendingUp, Brain, Settings, LogOut, BarChart2, Target, FileText } from "lucide-react";
+import { ThemeToggle } from "./ThemeToggle";
 
 const NAV_ITEMS = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { href: "/goals", label: "Metas", icon: BookOpen },
   { href: "/progress", label: "Progresso", icon: TrendingUp },
+  { href: "/analytics", label: "Analytics", icon: BarChart2 },
+  { href: "/career", label: "Carreira", icon: Target },
+  { href: "/reports", label: "Relatórios", icon: FileText },
   { href: "/coach", label: "Coach", icon: Brain },
   { href: "/settings", label: "Config", icon: Settings },
 ];
@@ -56,11 +60,13 @@ export function NavBar() {
           {/* Separator */}
           <div className="w-px h-4 bg-border/60 mx-1" />
 
+          <ThemeToggle />
+
           {/* Sign out — icon only */}
           <button
             onClick={() => signOut({ callbackUrl: "/login" })}
-            className="ml-3 rounded-lg p-1.5 text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-all duration-200"
-            aria-label="Sign out"
+            className="rounded-lg p-1.5 text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-all duration-200"
+            aria-label="Sair"
           >
             <LogOut className="h-4 w-4" />
           </button>

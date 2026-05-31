@@ -9,6 +9,10 @@ import {
   dailyPlans,
   dailyPlanTasks,
   coachMessages,
+  careerTargets,
+  skillGapReports,
+  knowledgeAssessments,
+  weeklyReports,
 } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
 
@@ -71,6 +75,13 @@ export async function GET() {
     .from(coachMessages)
     .where(eq(coachMessages.userId, userId));
 
+  const [careerTargetRows, gapReports, assessments, reports] = await Promise.all([
+    db.select().from(careerTargets).where(eq(careerTargets.userId, userId)),
+    db.select().from(skillGapReports).where(eq(skillGapReports.userId, userId)),
+    db.select().from(knowledgeAssessments).where(eq(knowledgeAssessments.userId, userId)),
+    db.select().from(weeklyReports).where(eq(weeklyReports.userId, userId)),
+  ]);
+
   const exportData = {
     exportedAt: new Date().toISOString(),
     userId,
@@ -78,6 +89,10 @@ export async function GET() {
     studySessions: sessions,
     dailyPlans: plansWithTasks,
     coachMessages: messages,
+    careerTargets: careerTargetRows,
+    skillGapReports: gapReports,
+    knowledgeAssessments: assessments,
+    weeklyReports: reports,
   };
 
   const date = new Date().toISOString().slice(0, 10);

@@ -27,7 +27,7 @@ export function StudyHeatmap({ weeklyActivity }: StudyHeatmapProps) {
     const d = new Date();
     d.setDate(d.getDate() - i);
     const date = d.toISOString().split("T")[0];
-    const label = d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+    const label = d.toLocaleDateString("pt-BR", { month: "short", day: "numeric" });
     days.push({ date, label });
   }
 

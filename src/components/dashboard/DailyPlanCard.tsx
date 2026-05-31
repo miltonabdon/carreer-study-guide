@@ -104,7 +104,7 @@ export function DailyPlanCard({ plan, onTaskComplete, onRegenerate }: DailyPlanC
                   className="w-16 text-xs border rounded px-1.5 py-0.5 text-right bg-background"
                 />
                 <span className="text-xs text-muted-foreground">min</span>
-                <button onClick={confirmMinutes} className="p-0.5 text-green-600 hover:text-green-700">
+                <button onClick={confirmMinutes} className="p-0.5 text-success hover:text-success/80">
                   <Check className="h-3.5 w-3.5" />
                 </button>
                 <button onClick={cancelEdit} className="p-0.5 text-muted-foreground hover:text-foreground">
@@ -134,7 +134,7 @@ export function DailyPlanCard({ plan, onTaskComplete, onRegenerate }: DailyPlanC
                 style={{
                   width: `${barWidth}%`,
                   background: allDone
-                    ? "#22c55e"
+                    ? "hsl(var(--success))"
                     : `linear-gradient(to right, hsl(var(--primary)), hsl(var(--primary) / 0.6))`,
                 }}
               />
@@ -148,10 +148,10 @@ export function DailyPlanCard({ plan, onTaskComplete, onRegenerate }: DailyPlanC
 
       {/* All-done celebration */}
       {allDone && (
-        <div className="px-5 py-5 bg-green-50 border-b border-green-100 text-center">
-          <Trophy className="h-8 w-8 text-green-500 mx-auto mb-2" />
-          <p className="font-semibold text-green-800 text-sm">Plano do dia completo! 🎉</p>
-          <p className="text-xs text-green-600 mt-1">
+        <div className="px-5 py-5 bg-success-subtle border-b border-success-border text-center">
+          <Trophy className="h-8 w-8 text-success mx-auto mb-2" />
+          <p className="font-semibold text-success-text text-sm">Plano do dia completo! 🎉</p>
+          <p className="text-xs text-success-text/70 mt-1">
             Ótimo trabalho — volte amanhã para manter a sequência
           </p>
         </div>
@@ -184,9 +184,9 @@ export function DailyPlanCard({ plan, onTaskComplete, onRegenerate }: DailyPlanC
       {/* Fallback banner */}
       {plan.fallbackUsed && (
         <div className="px-4 pb-2">
-          <div className="flex items-center gap-2 rounded-md bg-amber-50 border border-amber-200 px-3 py-2">
-            <AlertTriangle className="h-3.5 w-3.5 text-amber-500 shrink-0" />
-            <p className="text-xs text-amber-700">IA indisponível — plano gerado por regras internas</p>
+          <div className="flex items-center gap-2 rounded-md bg-warning-subtle border border-warning-border px-3 py-2">
+            <AlertTriangle className="h-3.5 w-3.5 text-warning shrink-0" />
+            <p className="text-xs text-warning-text">IA indisponível — plano gerado por regras internas</p>
           </div>
         </div>
       )}

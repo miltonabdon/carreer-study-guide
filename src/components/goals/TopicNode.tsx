@@ -1,8 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import { ExternalLink, StickyNote, SkipForward, Undo2, Clock, Zap, Play, CheckCircle, BookCheck, BellRing } from "lucide-react";
+import { ExternalLink, StickyNote, SkipForward, Undo2, Clock, Zap, Play, CheckCircle, BookCheck, BellRing, GraduationCap } from "lucide-react";
 import { getYouTubeVideoId } from "@/lib/utils";
+import { AssessmentModal } from "@/components/assessments/AssessmentModal";
 
 interface Topic {
   id: string;
@@ -27,9 +28,9 @@ const STATUS_STYLES: Record<Topic["status"], string> = {
   locked: "border-muted-foreground/30 bg-muted/50 text-muted-foreground",
   unlocked: "border-primary/50 bg-background",
   in_progress: "border-primary bg-primary/5 ring-2 ring-primary/20 shadow-sm shadow-primary/10",
-  complete: "border-green-500 bg-green-50 dark:bg-green-950/20",
+  complete: "border-success-border bg-success-subtle",
   skipped: "border-muted-foreground/20 bg-muted/30 text-muted-foreground",
-  known: "border-blue-400 bg-blue-50 dark:bg-blue-950/20",
+  known: "border-info-border bg-info-subtle",
 };
 
 export function TopicNode({ topic, onUpdate, onComplete }: TopicNodeProps) {
@@ -107,8 +108,24 @@ export function TopicNode({ topic, onUpdate, onComplete }: TopicNodeProps) {
   const canInteract = topic.status !== "locked";
   const canComplete = topic.status === "unlocked" || topic.status === "in_progress";
   const canBoost = topic.status === "complete" || topic.status === "known";
+  const canAssess = topic.status === "complete" || topic.status === "known";
   const [markingKnown, setMarkingKnown] = useState(false);
   const [boosting, setBoosting] = useState(false);
+  const [assessmentData, setAssessmentData] = useState<Parameters<typeof AssessmentModal>[0]["data"] | null>(null);
+  const [requestingAssessment, setRequestingAssessment] = useState(false);
+
+  async function handleRequestAssessment() {
+    setRequestingAssessment(true);
+    try {
+      const res = await fetch(`/api/topics/${topic.id}/assessment`, { method: "POST" });
+      if (res.ok || res.status === 201) {
+        const data = await res.json();
+        setAssessmentData({ ...data, topicTitle: topic.title });
+      }
+    } finally {
+      setRequestingAssessment(false);
+    }
+  }
 
   async function handleReviewBoost() {
     setBoosting(true);
@@ -142,17 +159,17 @@ export function TopicNode({ topic, onUpdate, onComplete }: TopicNodeProps) {
               </span>
             )}
             {topic.status === "complete" && (
-              <span className="rounded-full bg-green-100 text-green-700 px-2 py-0.5 text-xs font-medium">
+              <span className="rounded-full bg-success-subtle text-success-text border border-success-border px-2 py-0.5 text-xs font-medium">
                 Concluído
               </span>
             )}
             {topic.status === "known" && (
-              <span className="rounded-full bg-blue-100 text-blue-700 px-2 py-0.5 text-xs font-medium">
+              <span className="rounded-full bg-info-subtle text-info-text border border-info-border px-2 py-0.5 text-xs font-medium">
                 Já sei
               </span>
             )}
             {isOverdue && (
-              <span className="rounded-full bg-orange-100 text-orange-700 px-2 py-0.5 text-xs font-medium">
+              <span className="rounded-full bg-warning-subtle text-warning-text border border-warning-border px-2 py-0.5 text-xs font-medium">
                 Revisão pendente
               </span>
             )}
@@ -206,7 +223,7 @@ export function TopicNode({ topic, onUpdate, onComplete }: TopicNodeProps) {
             {canComplete && (
               <button
                 onClick={() => setShowComplete(!showComplete)}
-                className={`rounded p-1.5 ${showComplete ? "text-green-600 bg-green-50" : "text-muted-foreground hover:text-green-600 hover:bg-green-50"}`}
+                className={`rounded p-1.5 ${showComplete ? "text-success bg-success-subtle" : "text-muted-foreground hover:text-success hover:bg-success-subtle"}`}
                 title="Concluir tópico"
               >
                 <CheckCircle className="h-4 w-4" />
@@ -216,7 +233,7 @@ export function TopicNode({ topic, onUpdate, onComplete }: TopicNodeProps) {
               <button
                 onClick={handleMarkKnown}
                 disabled={markingKnown}
-                className="rounded p-1.5 text-muted-foreground hover:text-blue-600 hover:bg-blue-50 disabled:opacity-50"
+                className="rounded p-1.5 text-muted-foreground hover:text-info hover:bg-info-subtle disabled:opacity-50"
                 title="Já sei este tópico (pular estudo, manter revisão)"
               >
                 <BookCheck className="h-4 w-4" />
@@ -226,10 +243,20 @@ export function TopicNode({ topic, onUpdate, onComplete }: TopicNodeProps) {
               <button
                 onClick={handleReviewBoost}
                 disabled={boosting}
-                className="rounded p-1.5 text-muted-foreground hover:text-amber-600 hover:bg-amber-50 disabled:opacity-50"
+                className="rounded p-1.5 text-muted-foreground hover:text-warning hover:bg-warning-subtle disabled:opacity-50"
                 title="Precisa de atenção — adiantar próxima revisão para amanhã"
               >
                 <BellRing className="h-4 w-4" />
+              </button>
+            )}
+            {canAssess && (
+              <button
+                onClick={handleRequestAssessment}
+                disabled={requestingAssessment}
+                className="rounded p-1.5 text-muted-foreground hover:text-primary hover:bg-primary/10 disabled:opacity-50"
+                title="Solicitar Avaliação"
+              >
+                <GraduationCap className="h-4 w-4" />
               </button>
             )}
             {topic.status !== "complete" && topic.status !== "in_progress" && topic.status !== "known" && (
@@ -324,8 +351,8 @@ export function TopicNode({ topic, onUpdate, onComplete }: TopicNodeProps) {
       )}
 
       {showComplete && (
-        <div className="mt-3 space-y-3 border-t border-green-200 pt-3 bg-green-50/50 rounded-b-lg -mx-4 -mb-4 px-4 pb-4">
-          <p className="text-xs font-medium text-green-800">Registrar conclusão</p>
+        <div className="mt-3 space-y-3 border-t border-success-border pt-3 bg-success-subtle/50 rounded-b-lg -mx-4 -mb-4 px-4 pb-4">
+          <p className="text-xs font-medium text-success-text">Registrar conclusão</p>
           <div className="flex gap-4">
             <div className="flex-1">
               <label className="text-xs text-muted-foreground block mb-1">Tempo estudado (min)</label>
@@ -335,7 +362,7 @@ export function TopicNode({ topic, onUpdate, onComplete }: TopicNodeProps) {
                 max={480}
                 value={completeDuration}
                 onChange={(e) => setCompleteDuration(Number(e.target.value))}
-                className="w-full rounded border px-2 py-1 text-xs focus:outline-none focus:ring-1 focus:ring-green-500"
+                className="w-full rounded border px-2 py-1 text-xs focus:outline-none focus:ring-1 focus:ring-success bg-background text-foreground"
               />
             </div>
             <div className="flex-1">
@@ -347,8 +374,8 @@ export function TopicNode({ topic, onUpdate, onComplete }: TopicNodeProps) {
                     onClick={() => setCompleteConfidence(n)}
                     className={`w-7 h-7 rounded text-xs font-bold transition-colors ${
                       completeConfidence === n
-                        ? "bg-green-600 text-white"
-                        : "bg-white border border-gray-300 text-gray-600 hover:border-green-400"
+                        ? "bg-success text-success-foreground"
+                        : "bg-background border border-border text-muted-foreground hover:border-success"
                     }`}
                   >
                     {n}
@@ -358,7 +385,7 @@ export function TopicNode({ topic, onUpdate, onComplete }: TopicNodeProps) {
             </div>
           </div>
           {completeError && (
-            <p className="text-xs text-red-600 font-medium">{completeError}</p>
+            <p className="text-xs text-destructive font-medium">{completeError}</p>
           )}
           <div className="flex gap-2 justify-end">
             <button
@@ -370,12 +397,19 @@ export function TopicNode({ topic, onUpdate, onComplete }: TopicNodeProps) {
             <button
               onClick={handleComplete}
               disabled={completing}
-              className="text-xs px-3 py-1.5 rounded bg-green-600 text-white hover:bg-green-700 disabled:opacity-50 font-medium"
+              className="text-xs px-3 py-1.5 rounded bg-success text-success-foreground hover:bg-success/90 disabled:opacity-50 font-medium"
             >
               {completing ? "Salvando…" : "Concluir tópico"}
             </button>
           </div>
         </div>
+      )}
+
+      {assessmentData && (
+        <AssessmentModal
+          data={assessmentData}
+          onClose={() => setAssessmentData(null)}
+        />
       )}
     </div>
   );

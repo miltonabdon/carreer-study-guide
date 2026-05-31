@@ -303,17 +303,17 @@ const ALL_TECHNIQUES: Technique[] = [
 ];
 
 const DIFFICULTY_COLOR: Record<Technique["difficulty"], string> = {
-  Intermediário: "bg-blue-50 text-blue-700 border-blue-200",
-  Avançado: "bg-amber-50 text-amber-700 border-amber-200",
-  Expert: "bg-red-50 text-red-700 border-red-200",
+  Intermediário: "bg-info-subtle text-info-text border-info-border",
+  Avançado: "bg-warning-subtle text-warning-text border-warning-border",
+  Expert: "bg-destructive/10 text-destructive border-destructive/20",
 };
 
 const GROUP_COLOR: Record<Technique["group"], string> = {
-  Fundamentos: "text-slate-500",
-  RAG: "text-teal-600",
-  Agentic: "text-violet-600",
-  Treinamento: "text-orange-600",
-  Produção: "text-rose-600",
+  Fundamentos: "text-muted-foreground",
+  RAG: "text-info-text",
+  Agentic: "text-primary",
+  Treinamento: "text-streak-text",
+  Produção: "text-destructive",
 };
 
 interface Props {
@@ -377,8 +377,8 @@ export function AITechSuggestions({ existingGoalTitles = [] }: Props) {
         <div className="flex items-center justify-center w-6 h-6 rounded-md bg-gradient-to-br from-violet-500 to-indigo-600">
           <Sparkles className="w-3.5 h-3.5 text-white" />
         </div>
-        <h2 className="text-sm font-semibold text-gray-900">Sugestões para você</h2>
-        <span className="text-xs text-gray-400 ml-auto flex items-center gap-0.5">
+        <h2 className="text-sm font-semibold text-foreground">Sugestões para você</h2>
+        <span className="text-xs text-muted-foreground ml-auto flex items-center gap-0.5">
           <Brain className="w-3 h-3" /> baseado no seu perfil
         </span>
       </div>
@@ -391,29 +391,29 @@ export function AITechSuggestions({ existingGoalTitles = [] }: Props) {
           return (
             <div
               key={tech.id}
-              className="rounded-xl border border-gray-100 bg-white p-4 shadow-sm hover:shadow-md transition-shadow animate-in fade-in slide-in-from-bottom-2 fill-mode-both"
+              className="rounded-xl border border-border bg-card p-4 shadow-sm hover:shadow-md hover:border-primary/20 transition-all animate-in fade-in slide-in-from-bottom-2 fill-mode-both"
               style={{ animationDelay: `${index * 70}ms`, animationDuration: '280ms' }}
             >
               <div className="flex items-start justify-between gap-3">
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 flex-wrap mb-1">
-                    <span className="text-sm font-semibold text-gray-900">{tech.title}</span>
+                    <span className="text-sm font-semibold text-foreground">{tech.title}</span>
                     <span
                       className={`text-[10px] font-medium px-1.5 py-0.5 rounded-full border ${DIFFICULTY_COLOR[tech.difficulty]}`}
                     >
                       {tech.difficulty}
                     </span>
-                    <span className="text-[10px] text-gray-400 bg-gray-50 px-1.5 py-0.5 rounded-full border border-gray-100">
+                    <span className="text-[10px] text-muted-foreground bg-muted/60 px-1.5 py-0.5 rounded-full border border-border">
                       {tech.tag}
                     </span>
                     <span className={`text-[10px] font-medium ${GROUP_COLOR[tech.group]}`}>
                       Trilha {tech.order}/{ALL_TECHNIQUES.length} · {tech.group}
                     </span>
                   </div>
-                  <p className="text-xs text-gray-500 leading-relaxed line-clamp-2">
+                  <p className="text-xs text-muted-foreground leading-relaxed line-clamp-2">
                     {tech.description}
                   </p>
-                  <p className="text-xs text-indigo-600 mt-1.5 flex items-center gap-1">
+                  <p className="text-xs text-primary mt-1.5 flex items-center gap-1">
                     <ChevronRight className="w-3 h-3 shrink-0" />
                     {tech.whyNow}
                   </p>
@@ -424,8 +424,8 @@ export function AITechSuggestions({ existingGoalTitles = [] }: Props) {
                   disabled={isAdded || isCreating}
                   className={`shrink-0 flex items-center gap-1 text-xs font-medium px-3 py-1.5 rounded-lg transition-all ${
                     isAdded
-                      ? "bg-green-50 text-green-700 border border-green-200 cursor-default"
-                      : "bg-indigo-600 text-white hover:bg-indigo-700 disabled:opacity-60"
+                      ? "bg-success-subtle text-success-text border border-success-border cursor-default"
+                      : "bg-primary text-primary-foreground hover:bg-primary/90 disabled:opacity-60"
                   }`}
                 >
                   {isCreating ? (

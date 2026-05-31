@@ -18,9 +18,9 @@ interface GoalProgressCardProps {
 }
 
 const PRIORITY_COLORS = {
-  high: "bg-red-100 text-red-700",
-  medium: "bg-yellow-100 text-yellow-700",
-  low: "bg-green-100 text-green-700",
+  high: "bg-destructive/10 text-destructive",
+  medium: "bg-warning-subtle text-warning-text border border-warning-border",
+  low: "bg-success-subtle text-success-text border border-success-border",
 };
 
 const PRIORITY_LABELS = {
@@ -59,7 +59,7 @@ export function GoalProgressCard({ goal }: GoalProgressCardProps) {
       {/* Vertical progress bar */}
       <div className="w-1 rounded-full bg-muted relative overflow-hidden self-stretch min-h-[48px]">
         <div
-          className={`absolute inset-x-0 bottom-0 rounded-full transition-all duration-700 ease-out ${goal.atRisk ? "bg-amber-500" : "bg-primary"}`}
+          className={`absolute inset-x-0 bottom-0 rounded-full transition-all duration-700 ease-out ${goal.atRisk ? "bg-warning" : "bg-primary"}`}
           style={{ height: `${barHeight}%` }}
         />
       </div>
@@ -72,7 +72,7 @@ export function GoalProgressCard({ goal }: GoalProgressCardProps) {
             {PRIORITY_LABELS[goal.priority]}
           </span>
           {goal.atRisk && (
-            <span className="shrink-0 inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium bg-amber-100 text-amber-700">
+            <span className="shrink-0 inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium bg-warning-subtle text-warning-text border border-warning-border">
               <AlertTriangle className="h-3 w-3" />
               atrasado
               {daysLate !== null && daysLate > 0 && ` ${daysLate}d`}
@@ -82,7 +82,7 @@ export function GoalProgressCard({ goal }: GoalProgressCardProps) {
         <p className="text-xs text-muted-foreground">
           {goal.completedTopics}/{goal.totalTopics} tópicos · {goal.completionPercent}%
           {estimatedDate && (
-            <span className={`ml-2 ${goal.atRisk ? "text-amber-600" : ""}`}>
+            <span className={`ml-2 ${goal.atRisk ? "text-warning-text" : ""}`}>
               · previsão {estimatedDate}
             </span>
           )}

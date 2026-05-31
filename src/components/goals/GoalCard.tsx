@@ -22,9 +22,9 @@ interface GoalCardProps {
 }
 
 const PRIORITY_COLORS: Record<"high" | "medium" | "low", string> = {
-  high: "bg-red-100 text-red-700",
-  medium: "bg-yellow-100 text-yellow-700",
-  low: "bg-green-100 text-green-700",
+  high: "bg-destructive/10 text-destructive",
+  medium: "bg-warning-subtle text-warning-text border border-warning-border",
+  low: "bg-success-subtle text-success-text border border-success-border",
 };
 
 export function GoalCard({ goal, onStatusChange }: GoalCardProps) {
@@ -81,7 +81,7 @@ export function GoalCard({ goal, onStatusChange }: GoalCardProps) {
         <div className="w-1 rounded-full bg-muted relative overflow-hidden shrink-0 self-stretch min-h-[80px]">
           <div
             className={`absolute inset-x-0 bottom-0 rounded-full transition-all duration-700 ease-out ${
-              goal.atRisk && active ? "bg-amber-500" : "bg-primary"
+              goal.atRisk && active ? "bg-warning" : "bg-primary"
             }`}
             style={{ height: `${barHeight}%` }}
           />
@@ -129,7 +129,7 @@ export function GoalCard({ goal, onStatusChange }: GoalCardProps) {
 
           {/* atRisk inline */}
           {goal.atRisk && active && (
-            <p className="text-xs text-amber-600 flex items-center gap-1 mt-2">
+            <p className="text-xs text-warning-text flex items-center gap-1 mt-2">
               <AlertTriangle className="h-3 w-3 shrink-0" />
               {daysLate !== null && daysLate > 0
                 ? `${daysLate} dias atrasado`

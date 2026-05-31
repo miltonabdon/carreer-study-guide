@@ -51,24 +51,24 @@ export function AIGenerationProgress() {
       {/* Label row */}
       <div className="flex items-center justify-between mb-2.5">
         <span
-          className="text-xs font-medium text-blue-600 transition-opacity duration-150"
+          className="text-xs font-medium text-primary transition-opacity duration-150"
           style={{ opacity: fadeLabel ? 1 : 0 }}
         >
           {label}
         </span>
-        <span className="text-xs tabular-nums text-gray-400 font-mono">
+        <span className="text-xs tabular-nums text-muted-foreground font-mono">
           {Math.round(progress)}%
         </span>
       </div>
 
       {/* Track */}
-      <div className="h-2.5 bg-gray-100 rounded-full overflow-hidden">
+      <div className="h-2.5 bg-muted rounded-full overflow-hidden">
         <div
-          className="h-full rounded-full bg-gradient-to-r from-blue-500 via-indigo-500 to-violet-500 relative overflow-hidden"
+          className="h-full rounded-full bg-primary relative overflow-hidden"
           style={{ width: `${progress}%`, transition: "width 0.12s ease-out" }}
         >
           {/* Shimmer leading edge */}
-          <div className="absolute inset-y-0 right-0 w-10 bg-gradient-to-r from-transparent to-white/40 animate-pulse" />
+          <div className="absolute inset-y-0 right-0 w-10 bg-gradient-to-r from-transparent to-primary-foreground/20 animate-pulse" />
         </div>
       </div>
 
@@ -79,10 +79,10 @@ export function AIGenerationProgress() {
             key={i}
             className={`rounded-full transition-all duration-500 ${
               i < stageIndex
-                ? "h-1.5 w-1.5 bg-indigo-400"
+                ? "h-1.5 w-1.5 bg-primary/50"
                 : i === stageIndex
-                ? "h-2 w-2 bg-blue-500 ring-2 ring-blue-200"
-                : "h-1.5 w-1.5 bg-gray-200"
+                ? "h-2 w-2 bg-primary ring-2 ring-primary/30"
+                : "h-1.5 w-1.5 bg-muted-foreground/20"
             }`}
           />
         ))}

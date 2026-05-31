@@ -89,6 +89,85 @@ export function buildDailyDigestEmail(data: DailyDigestData): { subject: string;
   return { subject, html };
 }
 
+interface WeeklyReportEmailData {
+  displayName: string;
+  weekId: string;
+  periodStart: string;
+  periodEnd: string;
+  topicsCompleted: number;
+  studyHours: number;
+  streakDays: number;
+  topDomain: string | null;
+  weakestDomain: string | null;
+  aiInsight: string;
+  appUrl: string;
+}
+
+export function buildWeeklyReportEmail(data: WeeklyReportEmailData): { subject: string; html: string } {
+  const { displayName, periodStart, periodEnd, topicsCompleted, studyHours, streakDays, topDomain, weakestDomain, aiInsight, appUrl } = data;
+
+  const fmt = (d: string) =>
+    new Date(d + "T12:00:00").toLocaleDateString("pt-BR", { day: "2-digit", month: "short" });
+  const periodLabel = `${fmt(periodStart)} – ${fmt(periodEnd)}`;
+
+  const metricsRows = [
+    ["Tópicos concluídos", String(topicsCompleted)],
+    ["Horas de estudo", `${studyHours.toFixed(1)}h`],
+    ["Sequência atual", `${streakDays} dias`],
+    ["Domínio principal", topDomain ?? "—"],
+    ["Domínio a reforçar", weakestDomain ?? "—"],
+  ]
+    .map(
+      ([label, value]) => `
+        <tr>
+          <td style="padding:8px 0;border-bottom:1px solid #f1f5f9;font-size:13px;color:#64748b;">${label}</td>
+          <td style="padding:8px 0;border-bottom:1px solid #f1f5f9;font-size:13px;font-weight:600;text-align:right;">${value}</td>
+        </tr>`
+    )
+    .join("");
+
+  const html = `
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
+<body style="font-family:system-ui,sans-serif;background:#f8fafc;margin:0;padding:24px;">
+  <div style="max-width:480px;margin:0 auto;background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,.08);">
+
+    <div style="background:#0f172a;padding:24px 28px;">
+      <p style="color:#94a3b8;font-size:12px;margin:0 0 4px;">StudyGuide AI</p>
+      <h1 style="color:#fff;font-size:20px;margin:0;">Seu relatório semanal</h1>
+      <p style="color:#cbd5e1;font-size:13px;margin:6px 0 0;">${periodLabel}</p>
+    </div>
+
+    <div style="padding:24px 28px;">
+      <p style="font-size:14px;color:#334155;margin:0 0 20px;">Olá, <strong>${displayName}</strong>! Aqui está o resumo da sua semana de estudos:</p>
+
+      <table style="width:100%;border-collapse:collapse;">${metricsRows}</table>
+
+      <div style="margin-top:20px;background:#f8fafc;border-left:3px solid #3b82f6;padding:12px 16px;border-radius:0 8px 8px 0;">
+        <p style="font-size:12px;color:#3b82f6;font-weight:600;margin:0 0 4px;text-transform:uppercase;letter-spacing:.04em;">Insight da semana</p>
+        <p style="font-size:14px;color:#334155;margin:0;font-style:italic;">"${aiInsight}"</p>
+      </div>
+
+      <div style="margin-top:24px;text-align:center;">
+        <a href="${appUrl}/reports"
+           style="display:inline-block;background:#0f172a;color:#fff;text-decoration:none;padding:12px 28px;border-radius:8px;font-size:14px;font-weight:600;">
+          Ver relatório completo →
+        </a>
+      </div>
+    </div>
+
+    <div style="padding:16px 28px;border-top:1px solid #f1f5f9;text-align:center;">
+      <p style="font-size:11px;color:#94a3b8;margin:0;">StudyGuide AI · Você recebe este e-mail porque tem notificações ativas.</p>
+    </div>
+  </div>
+</body>
+</html>`;
+
+  const subject = `[StudyGuide] Semana de ${fmt(periodStart)}: ${topicsCompleted} tópico${topicsCompleted !== 1 ? "s" : ""} concluído${topicsCompleted !== 1 ? "s" : ""}`;
+  return { subject, html };
+}
+
 export function buildPasswordResetEmail(resetLink: string): { subject: string; html: string } {
   const subject = "[StudyGuide] Redefinição de senha";
 
