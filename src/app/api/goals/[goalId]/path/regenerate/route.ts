@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { learningGoals, learningPaths, topics, users } from "@/lib/db/schema";
-import { eq, and } from "drizzle-orm";
+import { eq, and, inArray } from "drizzle-orm";
 import { generateLearningPath } from "@/lib/ai/generate";
 import { getRedisClient } from "@/lib/redis";
 
@@ -42,19 +42,14 @@ export async function POST(_request: Request, { params }: RouteContext) {
     const completedTopics = await db
       .select({ title: topics.title })
       .from(topics)
-      .where(and(eq(topics.pathId, oldPath.id)));
+      .where(
+        and(
+          eq(topics.pathId, oldPath.id),
+          inArray(topics.status, ["complete", "known"])
+        )
+      );
 
-    completedTitles = completedTopics
-      .filter((_, i) => i >= 0) // fetch all, filter complete ones below
-      .map((t) => t.title);
-
-    // Actually fetch only completed ones
-    const onlyCompleted = await db
-      .select({ title: topics.title })
-      .from(topics)
-      .where(and(eq(topics.pathId, oldPath.id)));
-
-    completedTitles = onlyCompleted.map((t) => t.title);
+    completedTitles = completedTopics.map((t) => t.title);
 
     await db
       .update(learningPaths)
