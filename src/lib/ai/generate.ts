@@ -292,8 +292,8 @@ const topicSchema = z.object({
   orderIndex: z.number().int().min(0),
   complexity: z.number().int().min(1).max(5),
   estimatedMinutes: z.number().int().min(15).max(360),
-  resourceUrl: z.string().url().optional(),
-  articleUrl: z.string().url().optional(),
+  resourceUrl: z.string().url().optional().catch(undefined),
+  articleUrl: z.string().url().optional().catch(undefined),
   explanation: z.string().optional(),
 });
 
