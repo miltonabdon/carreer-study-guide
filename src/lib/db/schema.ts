@@ -126,6 +126,8 @@ export const topics = pgTable("topics", {
   status: topicStatusEnum("status").notNull().default("locked"),
   resourceUrl: text("resource_url"),
   notes: text("notes"),
+  explanation: text("explanation"),
+  articleUrl: text("article_url"),
   domain: text("domain"),
   // FSRS fields
   fsrsState: fsrsStateEnum("fsrs_state").notNull().default("New"),
