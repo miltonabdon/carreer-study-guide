@@ -67,11 +67,37 @@ export async function GET(_request: Request, { params }: RouteContext) {
     path = newPath;
   }
 
-  const topicList = await db
+  let topicList = await db
     .select()
     .from(topics)
     .where(eq(topics.pathId, path.id))
     .orderBy(asc(topics.orderIndex));
+
+  // Repair any topics that should be unlocked but are still locked because
+  // the predecessor was completed before the unlock-next logic was in place.
+  const DONE_STATUSES = new Set(["complete", "in_progress", "known", "skipped"]);
+  const toUnlock: string[] = [];
+  for (let i = 1; i < topicList.length; i++) {
+    const prev = topicList[i - 1];
+    const curr = topicList[i];
+    if (curr.status === "locked" && DONE_STATUSES.has(prev.status)) {
+      toUnlock.push(curr.id);
+    }
+  }
+  if (toUnlock.length > 0) {
+    const now = new Date();
+    await Promise.all(
+      toUnlock.map((id) =>
+        db.update(topics).set({ status: "unlocked", updatedAt: now }).where(eq(topics.id, id))
+      )
+    );
+    // Re-fetch with repaired statuses
+    topicList = await db
+      .select()
+      .from(topics)
+      .where(eq(topics.pathId, path.id))
+      .orderBy(asc(topics.orderIndex));
+  }
 
   const totalTopics = topicList.length;
   const completedTopics = topicList.filter((t) => t.status === "complete").length;
