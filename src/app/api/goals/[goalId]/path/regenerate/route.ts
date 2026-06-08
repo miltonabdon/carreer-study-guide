@@ -89,6 +89,9 @@ export async function POST(_request: Request, { params }: RouteContext) {
     complexity: t.complexity,
     estimatedMinutes: t.estimatedMinutes,
     status: i === 0 ? ("unlocked" as const) : ("locked" as const),
+    resourceUrl: t.resourceUrl ?? null,
+    articleUrl: t.articleUrl ?? null,
+    explanation: t.explanation ?? null,
   }));
 
   await db.insert(topics).values(topicRows);

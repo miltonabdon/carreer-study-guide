@@ -292,6 +292,9 @@ const topicSchema = z.object({
   orderIndex: z.number().int().min(0),
   complexity: z.number().int().min(1).max(5),
   estimatedMinutes: z.number().int().min(15).max(360),
+  resourceUrl: z.string().url().optional(),
+  articleUrl: z.string().url().optional(),
+  explanation: z.string().optional(),
 });
 
 const learningPathSchema = z.object({
@@ -305,14 +308,86 @@ export type GeneratedLearningPath = z.infer<typeof learningPathSchema> & { fallb
 
 function mockLearningPath(goalTitle: string, dailyAvailableMinutes: number): GeneratedLearningPath {
   const topics = [
-    { title: "Fundamentos e Conceitos Base", description: `Conceitos fundamentais de ${goalTitle}`, orderIndex: 0, complexity: 1, estimatedMinutes: 60 },
-    { title: "Configuração do Ambiente", description: "Setup e ferramentas necessárias", orderIndex: 1, complexity: 2, estimatedMinutes: 45 },
-    { title: "Primeiros Passos Práticos", description: "Exercícios introdutórios guiados", orderIndex: 2, complexity: 2, estimatedMinutes: 90 },
-    { title: "Conceitos Intermediários", description: "Aprofundamento nos conceitos principais", orderIndex: 3, complexity: 3, estimatedMinutes: 90 },
-    { title: "Integração e Pipelines", description: "Conectando componentes em fluxos reais", orderIndex: 4, complexity: 3, estimatedMinutes: 120 },
-    { title: "Técnicas Avançadas", description: "Otimização e boas práticas", orderIndex: 5, complexity: 4, estimatedMinutes: 120 },
-    { title: "Projeto Prático", description: "Aplicação dos conceitos em projeto real", orderIndex: 6, complexity: 4, estimatedMinutes: 180 },
-    { title: "Produção e Deploy", description: "Colocando em produção com qualidade", orderIndex: 7, complexity: 5, estimatedMinutes: 120 },
+    {
+      title: "Fundamentos e Conceitos Base",
+      description: `Conceitos fundamentais de ${goalTitle}`,
+      orderIndex: 0,
+      complexity: 1,
+      estimatedMinutes: 60,
+      resourceUrl: "https://www.youtube.com/watch?v=rfscVS0vtbw",
+      articleUrl: "https://developer.mozilla.org/en-US/docs/Learn",
+      explanation: `Este tópico cobre os conceitos fundamentais necessários para começar a estudar ${goalTitle}. Como arquiteto de software, você já possui uma base sólida em sistemas distribuídos e padrões de design — use essa experiência como âncora para os novos conceitos.\n\nFoque em entender o "por quê" antes do "como": qual problema este conhecimento resolve? Como ele se encaixa na sua stack atual? Essa perspectiva acelera o aprendizado e facilita decisões de arquitetura futuras.\n\nAo praticar, implemente um exemplo mínimo funcional antes de ir para casos complexos. Falhar rápido em um ambiente controlado é a forma mais eficiente de fixar fundamentos.`,
+    },
+    {
+      title: "Configuração do Ambiente",
+      description: "Setup e ferramentas necessárias",
+      orderIndex: 1,
+      complexity: 2,
+      estimatedMinutes: 45,
+      resourceUrl: "https://www.youtube.com/watch?v=YYXdXT2l-Gg",
+      articleUrl: "https://docs.python.org/3/tutorial/",
+      explanation: `Configurar o ambiente corretamente poupa horas de debugging posterior. Este tópico cobre as ferramentas, versões e configurações necessárias para trabalhar de forma eficiente.\n\nSiga o princípio de infraestrutura como código: documente cada passo de configuração em um README ou script, assim qualquer membro do time pode reproduzir o ambiente. Isso também vale para projetos pessoais — você mesmo no futuro agradecerá.\n\nVerifique a compatibilidade de versões antes de instalar dependências. Conflitos de versão são a causa mais comum de problemas em ambientes de desenvolvimento.`,
+    },
+    {
+      title: "Primeiros Passos Práticos",
+      description: "Exercícios introdutórios guiados",
+      orderIndex: 2,
+      complexity: 2,
+      estimatedMinutes: 90,
+      resourceUrl: "https://www.youtube.com/watch?v=kqtD5dpn9C8",
+      articleUrl: "https://roadmap.sh/",
+      explanation: `A melhor forma de consolidar teoria é colocando em prática imediatamente. Este tópico guia os primeiros exercícios práticos, garantindo que os conceitos fundamentais sejam reforçados com experiência hands-on.\n\nSiga o ciclo: leia o conceito → implemente um exemplo mínimo → quebre algo intencionalmente → conserte. Esse processo de "aprender errando com propósito" acelera significativamente a retenção.\n\nNão avance antes de entender o que está acontecendo. Velocidade sem compreensão gera dívida técnica de conhecimento — mais difícil de pagar do que dívida técnica em código.`,
+    },
+    {
+      title: "Conceitos Intermediários",
+      description: "Aprofundamento nos conceitos principais",
+      orderIndex: 3,
+      complexity: 3,
+      estimatedMinutes: 90,
+      resourceUrl: "https://www.youtube.com/watch?v=SLpUKAGnm-g",
+      articleUrl: "https://refactoring.guru/design-patterns",
+      explanation: `Com os fundamentos estabelecidos, este tópico aprofunda os conceitos centrais que diferenciam um uso básico de um uso profissional da tecnologia. Aqui entram padrões, boas práticas e armadilhas comuns.\n\nComo arquiteto, preste atenção especial aos trade-offs de cada decisão de design. Pergunte-se: "Qual é o custo desta abstração? Quando ela começa a prejudicar mais do que ajudar?" Esse pensamento crítico é o que separa boas arquiteturas de arquiteturas over-engineered.\n\nBusque conexões com padrões que você já conhece. Novos conceitos raramente são completamente novos — são variações de problemas já resolvidos em outros contextos.`,
+    },
+    {
+      title: "Integração e Pipelines",
+      description: "Conectando componentes em fluxos reais",
+      orderIndex: 4,
+      complexity: 3,
+      estimatedMinutes: 120,
+      resourceUrl: "https://www.youtube.com/watch?v=oJ5qSb3lMpI",
+      articleUrl: "https://martinfowler.com/articles/microservices.html",
+      explanation: `Componentes isolados têm valor limitado; o valor real emerge quando eles trabalham juntos em pipelines e fluxos de dados coerentes. Este tópico cobre como integrar os blocos construídos anteriormente em sistemas funcionais.\n\nPense em contratos de interface: cada componente deve expor uma API clara e estável, independente da sua implementação interna. Isso é especialmente crítico em sistemas distribuídos onde mudanças precisam ser retrocompatíveis.\n\nTeste as integrações com dados reais desde cedo. Dados sintéticos escondem problemas de serialização, encoding e casos de borda que só aparecem em produção.`,
+    },
+    {
+      title: "Técnicas Avançadas",
+      description: "Otimização e boas práticas",
+      orderIndex: 5,
+      complexity: 4,
+      estimatedMinutes: 120,
+      resourceUrl: "https://www.youtube.com/watch?v=8aGhZQkoFbQ",
+      articleUrl: "https://12factor.net/",
+      explanation: `Com uma base sólida, é hora de explorar as técnicas que tornam sistemas robustos, eficientes e maintainable em longo prazo. Este tópico cobre otimizações, padrões avançados e boas práticas de produção.\n\nLembre-se da regra de ouro: otimize depois de medir. Nunca otimize prematuramente. Use profiling para identificar gargalos reais antes de refatorar.\n\nDocumente as decisões arquiteturais tomadas neste estágio (ADRs — Architecture Decision Records). Quando você ou seu time revisitar o código meses depois, a documentação do "porquê" vale mais que o código em si.`,
+    },
+    {
+      title: "Projeto Prático",
+      description: "Aplicação dos conceitos em projeto real",
+      orderIndex: 6,
+      complexity: 4,
+      estimatedMinutes: 180,
+      resourceUrl: "https://www.youtube.com/watch?v=W6NZfCO5SIk",
+      articleUrl: "https://github.com/practical-tutorials/project-based-learning",
+      explanation: `O aprendizado só se consolida quando você constrói algo do zero com seus próprios objetivos. Este projeto prático integra todos os conceitos estudados em uma aplicação coerente e funcional.\n\nEscolha um problema que você realmente quer resolver — a motivação intrínseca é o melhor acelerador de aprendizado. Mesmo que o projeto seja simples, implemente-o com qualidade de produção: testes, tratamento de erros, logging.\n\nDocumente as decisões que você toma ao longo do projeto. Esse portfólio de decisões é o que diferencia um profissional sênior de um júnior no mercado.`,
+    },
+    {
+      title: "Produção e Deploy",
+      description: "Colocando em produção com qualidade",
+      orderIndex: 7,
+      complexity: 5,
+      estimatedMinutes: 120,
+      resourceUrl: "https://www.youtube.com/watch?v=Wvf0mBNGjXY",
+      articleUrl: "https://sre.google/sre-book/table-of-contents/",
+      explanation: `Levar software a produção com qualidade é onde a teoria encontra a realidade operacional. Este tópico cobre CI/CD, observabilidade, escalabilidade e as práticas SRE que garantem sistemas confiáveis.\n\nA tríade de observabilidade — logs, métricas e traces — deve ser implementada antes do primeiro deploy em produção, não depois do primeiro incidente. É muito mais fácil adicionar instrumentação quando o sistema ainda está fresco.\n\nAdote a mentalidade de "falha é inevitável": projete para degradação graciosa, implemente circuit breakers, e tenha runbooks documentados para os cenários de falha mais prováveis.`,
+    },
   ];
   const total = topics.reduce((s, t) => s + t.estimatedMinutes, 0);
   const weeks = Math.ceil(total / (dailyAvailableMinutes * 5));
@@ -347,7 +422,12 @@ Requirements:
 - Complexity scale: 1=beginner concept, 5=expert/advanced concept
 - Calculate totalEstimatedMinutes as the sum of all topic durations
 - Calculate completionWeeksEstimate based on ${dailyAvailableMinutes} min/day, 5 days/week
-- Include a paceWarning if the goal seems unrealistic for the timeline, or null if it's reasonable`,
+- Include a paceWarning if the goal seems unrealistic for the timeline, or null if it's reasonable
+
+For EACH topic also provide:
+- resourceUrl: a real YouTube video URL from a trusted channel (freeCodeCamp, Fireship, Traversy Media, Tech With Tim, Coding With Lewis, Academind, or the official channel of the technology). Pick a video that directly covers this specific topic. Use format: https://www.youtube.com/watch?v=VIDEO_ID
+- articleUrl: a real URL to official documentation or a quality technical article (official project docs, MDN, dev.to, Medium engineering blogs, Martin Fowler's blog, etc.) directly relevant to this topic
+- explanation: 2-4 paragraphs in pt-BR explaining the topic for a senior software architect. Structure: (1) central concept and why it matters in professional practice, (2) how it connects to software architecture patterns or distributed systems the learner already knows, (3) what to focus on when practicing it. Be specific, direct, and assume deep engineering background.`,
     });
     return { ...object, fallbackUsed: false };
   } catch (err) {
