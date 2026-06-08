@@ -16,6 +16,8 @@ interface Topic {
   resourceUrl: string | null;
   notes: string | null;
   nextReviewAt: string | null;
+  explanation: string | null;
+  articleUrl: string | null;
 }
 
 interface TopicNodeProps {
@@ -309,7 +311,42 @@ export function TopicNode({ topic, onUpdate, onComplete }: TopicNodeProps) {
       )}
 
       {showNotes && (
-        <div className="mt-3 space-y-2 border-t pt-3">
+        <div className="mt-3 space-y-3 border-t pt-3">
+          {/* AI-generated base content */}
+          {(topic.explanation || topic.articleUrl) && (
+            <div className="rounded-md bg-muted/50 border border-border/50 p-3 space-y-2">
+              <div className="flex items-center gap-1.5">
+                <span className="text-xs font-semibold text-foreground">Conteúdo base</span>
+                <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-primary/10 text-primary font-medium">
+                  Gerado pela IA
+                </span>
+              </div>
+              {topic.explanation && (
+                <div className="space-y-1">
+                  {topic.explanation.split("\n\n").map((paragraph, i) => (
+                    <p key={i} className="text-xs text-muted-foreground leading-relaxed">
+                      {paragraph}
+                    </p>
+                  ))}
+                </div>
+              )}
+              {topic.articleUrl && (
+                <div className="flex items-center gap-1 pt-1">
+                  <span className="text-xs text-muted-foreground">Artigo/Docs:</span>
+                  <a
+                    href={topic.articleUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-xs text-primary hover:underline truncate max-w-[240px]"
+                  >
+                    {topic.articleUrl.replace(/^https?:\/\//, "")}
+                  </a>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Editable user fields */}
           <div>
             <label className="text-xs font-medium text-muted-foreground block mb-1">
               Resource URL

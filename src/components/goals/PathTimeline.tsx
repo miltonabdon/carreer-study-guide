@@ -13,6 +13,8 @@ interface Topic {
   resourceUrl: string | null;
   notes: string | null;
   nextReviewAt: string | null;
+  explanation: string | null;
+  articleUrl: string | null;
 }
 
 interface PathTimelineProps {
